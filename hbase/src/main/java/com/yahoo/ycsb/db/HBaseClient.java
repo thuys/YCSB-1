@@ -99,14 +99,14 @@ public class HBaseClient extends com.yahoo.ycsb.DB
     {
         // Get the measurements instance as this is the only client that should
         // count clean up time like an update since autoflush is off.
-        Measurements _measurements = Measurements.getMeasurements();
+        //Measurements _measurements = Measurements.getMeasurements();
         try {
             long st=System.nanoTime();
             if (_hTable != null) {
                 _hTable.flushCommits();
             }
             long en=System.nanoTime();
-            _measurements.measure("UPDATE", (int)((en-st)/1000));
+           // _measurements.measure("UPDATE", (int)((en-st)/1000));
         } catch (IOException e) {
             throw new DBException(e);
         }

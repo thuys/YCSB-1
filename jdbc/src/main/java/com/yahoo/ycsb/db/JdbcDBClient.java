@@ -371,13 +371,13 @@ public class JdbcDBClient extends DB implements JdbcDBClientConstants {
       if(readStatement != null && readStatement.getConnection().isClosed()){
     	  cachedStatements.remove(type, readStatement);
     	  readStatement = null;
-    	  System.err.println("Read connection closed");
       }
       if (readStatement == null) {
         readStatement = createAndCacheReadStatement(type, key);
-        System.err.println("New read connection: " + readStatement);
       }
       readStatement.setString(1, key);
+      System.out.println("Read: " + readStatement.toString());
+
       ResultSet resultSet = readStatement.executeQuery();
       if (!resultSet.next()) {
         resultSet.close();
@@ -417,6 +417,8 @@ public class JdbcDBClient extends DB implements JdbcDBClientConstants {
         scanStatement = createAndCacheScanStatement(type, startKey);
       }
       scanStatement.setString(1, startKey);
+      System.out.println("Scan: " + scanStatement.toString());
+
       ResultSet resultSet = scanStatement.executeQuery();
       for (int i = 0; i < recordcount && resultSet.next(); i++) {
         if (result != null && fields != null) {
@@ -462,6 +464,7 @@ public class JdbcDBClient extends DB implements JdbcDBClientConstants {
         updateStatement.setString(index++, entry.getValue().toString());
       }
       updateStatement.setString(index, key);
+      System.out.println("Update: " + updateStatement.toString());
       int result = updateStatement.executeUpdate();
       if (result == 1) return SUCCESS;
       else return 1;
@@ -499,6 +502,8 @@ public class JdbcDBClient extends DB implements JdbcDBClientConstants {
         String field = entry.getValue().toString();
         insertStatement.setString(index++, field);
       }
+      System.out.println("Insert: " + insertStatement.toString());
+
       int result = insertStatement.executeUpdate();
       if (result == 1) return SUCCESS;
       else return 1;
