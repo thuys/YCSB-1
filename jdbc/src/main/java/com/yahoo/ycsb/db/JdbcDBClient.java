@@ -151,9 +151,52 @@ public class JdbcDBClient extends DB implements JdbcDBClientConstants {
      * @return Connection object
      */
     private Connection getShardConnectionByKey(String key) {
-        return conns.get(getShardIndexByKey(key));
+    	Connection conn = conns.get(getShardIndexByKey(key));
+    	try{
+    	if(conn.isClosed()){
+	    		System.err.println("Error in processing query: Connection is closed");
+	    		conn = closeAndReopenConnection(conn);
+    		
+    	}
+    	}catch(SQLException e){
+			System.err.println("Error in database operation: " + e);
+		}
+        return conn;
     }
 
+    private Connection closeAndReopenConnection(Connection conn ){
+		try{
+			conns.remove(conn);
+			conn.close();
+			
+		}catch(Exception e){}
+
+			String urls = props.getProperty(CONNECTION_URL, DEFAULT_PROP);
+			String user = props.getProperty(CONNECTION_USER, DEFAULT_PROP);
+			String passwd = props.getProperty(CONNECTION_PASSWD, DEFAULT_PROP);
+		    String autoCommitStr = props.getProperty(JDBC_AUTO_COMMIT, Boolean.TRUE.toString());
+		    Boolean autoCommit = Boolean.parseBoolean(autoCommitStr);
+			String[] urlsSplitted = urls.split(",");
+			try{
+	    	Connection connNew = DriverManager.getConnection(urlsSplitted[0], user, passwd);
+	
+	          // Since there is no explicit commit method in the DB interface, all
+	          // operations should auto commit, except when explicitly told not to
+	          // (this is necessary in cases such as for PostgreSQL when running a
+	          // scan workload with fetchSize)
+	    	connNew.setAutoCommit(autoCommit);
+	
+	    	conns.add(connNew);
+	    	return connNew;
+
+	    	
+		}catch(SQLException e){
+			System.err.println("Error in database operation: " + e);
+			conns.add(conn);
+		}
+		return conn;
+    	
+    }
     private void cleanupAllConnections() throws SQLException {
        for(Connection conn: conns) {
            conn.close();
@@ -325,8 +368,14 @@ public class JdbcDBClient extends DB implements JdbcDBClientConstants {
     try {
       StatementType type = new StatementType(StatementType.Type.READ, tableName, 1, getShardIndexByKey(key));
       PreparedStatement readStatement = cachedStatements.get(type);
+      if(readStatement != null && readStatement.getConnection().isClosed()){
+    	  cachedStatements.remove(type, readStatement);
+    	  readStatement = null;
+    	  System.err.println("Read connection closed");
+      }
       if (readStatement == null) {
         readStatement = createAndCacheReadStatement(type, key);
+        System.err.println("New read connection: " + readStatement);
       }
       readStatement.setString(1, key);
       ResultSet resultSet = readStatement.executeQuery();
@@ -343,8 +392,8 @@ public class JdbcDBClient extends DB implements JdbcDBClientConstants {
       resultSet.close();
       return SUCCESS;
     } catch (SQLException e) {
-        System.err.println("Error in processing read of table " + tableName + ": "+e);
-      return -2;
+        System.err.println("Error in processing scan of table: " + tableName + e);
+        return -2;
     }
 	}
 
@@ -360,6 +409,10 @@ public class JdbcDBClient extends DB implements JdbcDBClientConstants {
     try {
       StatementType type = new StatementType(StatementType.Type.SCAN, tableName, 1, getShardIndexByKey(startKey));
       PreparedStatement scanStatement = cachedStatements.get(type);
+      if(scanStatement != null && scanStatement.getConnection().isClosed()){
+    	  cachedStatements.remove(type, scanStatement);
+    	  scanStatement = null;
+      }
       if (scanStatement == null) {
         scanStatement = createAndCacheScanStatement(type, startKey);
       }
@@ -395,6 +448,12 @@ public class JdbcDBClient extends DB implements JdbcDBClientConstants {
       int numFields = values.size();
       StatementType type = new StatementType(StatementType.Type.UPDATE, tableName, numFields, getShardIndexByKey(key));
       PreparedStatement updateStatement = cachedStatements.get(type);
+      
+      if(updateStatement != null && updateStatement.getConnection().isClosed()){
+    	  cachedStatements.remove(type, updateStatement);
+    	  updateStatement = null;
+      }
+      
       if (updateStatement == null) {
         updateStatement = createAndCacheUpdateStatement(type, key);
       }
@@ -424,6 +483,13 @@ public class JdbcDBClient extends DB implements JdbcDBClientConstants {
 	    int numFields = values.size();
 	    StatementType type = new StatementType(StatementType.Type.INSERT, tableName, numFields, getShardIndexByKey(key));
 	    PreparedStatement insertStatement = cachedStatements.get(type);
+	    
+	      if(insertStatement != null && insertStatement.getConnection().isClosed()){
+	    	  cachedStatements.remove(type, insertStatement);
+	    	  insertStatement = null;
+	      }
+	      
+	      
 	    if (insertStatement == null) {
 	      insertStatement = createAndCacheInsertStatement(type, key);
 	    }
@@ -453,6 +519,10 @@ public class JdbcDBClient extends DB implements JdbcDBClientConstants {
     try {
       StatementType type = new StatementType(StatementType.Type.DELETE, tableName, 1, getShardIndexByKey(key));
       PreparedStatement deleteStatement = cachedStatements.get(type);
+      if(deleteStatement != null && deleteStatement.getConnection().isClosed()){
+    	  cachedStatements.remove(type, deleteStatement);
+    	  deleteStatement = null;
+      }
       if (deleteStatement == null) {
         deleteStatement = createAndCacheDeleteStatement(type, key);
       }
