@@ -376,7 +376,7 @@ public class JdbcDBClient extends DB implements JdbcDBClientConstants {
         readStatement = createAndCacheReadStatement(type, key);
       }
       readStatement.setString(1, key);
-      System.out.println("Read: " + readStatement.toString());
+      //System.out.println("Read: " + readStatement.toString());
 
       ResultSet resultSet = readStatement.executeQuery();
       if (!resultSet.next()) {
@@ -417,7 +417,7 @@ public class JdbcDBClient extends DB implements JdbcDBClientConstants {
         scanStatement = createAndCacheScanStatement(type, startKey);
       }
       scanStatement.setString(1, startKey);
-      System.out.println("Scan: " + scanStatement.toString());
+      //System.out.println("Scan: " + scanStatement.toString());
 
       ResultSet resultSet = scanStatement.executeQuery();
       for (int i = 0; i < recordcount && resultSet.next(); i++) {
@@ -464,7 +464,7 @@ public class JdbcDBClient extends DB implements JdbcDBClientConstants {
         updateStatement.setString(index++, entry.getValue().toString());
       }
       updateStatement.setString(index, key);
-      System.out.println("Update: " + updateStatement.toString());
+      //System.out.println("Update: " + updateStatement.toString());
       int result = updateStatement.executeUpdate();
       if (result == 1) return SUCCESS;
       else return 1;
@@ -502,7 +502,7 @@ public class JdbcDBClient extends DB implements JdbcDBClientConstants {
         String field = entry.getValue().toString();
         insertStatement.setString(index++, field);
       }
-      System.out.println("Insert: " + insertStatement.toString());
+      //System.out.println("Insert: " + insertStatement.toString());
 
       int result = insertStatement.executeUpdate();
       if (result == 1) return SUCCESS;
@@ -531,7 +531,7 @@ public class JdbcDBClient extends DB implements JdbcDBClientConstants {
       if (deleteStatement == null) {
         deleteStatement = createAndCacheDeleteStatement(type, key);
       }
-      deleteStatement.setString(1, key);
+     //deleteStatement.setString(1, key);
       int result = deleteStatement.executeUpdate();
       if (result == 1) return SUCCESS;
       else return 1;
