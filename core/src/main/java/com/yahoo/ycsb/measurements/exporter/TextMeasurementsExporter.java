@@ -55,7 +55,7 @@ public class TextMeasurementsExporter implements MeasurementsExporter
 	public void writeEvent(String id, long startTimeInMs, long delayInMs,
 			boolean isStarted, boolean isExecuted, int exitCode) throws IOException {
   		if(!hasWrittenEvent){
-  		    bw.write("[EVENT], ID, Start in ms, Delay in ms, Has been started, Has finished execution, exit code");
+  		    bw.write("[EVENT], ID, Start in ms, Delay in micro seconds, Has been started, Has finished execution, exit code");
   		    bw.newLine();
   			hasWrittenEvent = true;
   		}
