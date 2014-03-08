@@ -75,11 +75,14 @@ public class YCSBEvent implements Runnable{
 		Runtime rt = Runtime.getRuntime();
 		Process pr = null;
 		StreamWrapper stream = null;
+		String message = "";
 		
 		try {
 			pr = rt.exec(commands);
 			stream = new StreamWrapper(pr.getInputStream(), "");
 			returnCode = pr.waitFor();
+			stream.run();
+			message =  stream.getMessage();
 		} catch (IOException e) {
 			returnCode = -99;
 		}catch(InterruptedException e){
@@ -94,11 +97,7 @@ public class YCSBEvent implements Runnable{
 		
 		delayInMicros = (endTime-startTime)/1000;
 		isExecuted = true;
-		String message = "";
-		if(stream != null){
-			stream.run();
-			message =  stream.getMessage();
-		}
+		
 		System.err.println("EVENT" + ", " + getStartExecutingInMS()/1000 + " sec, "
 				+ getId() + ", STOP, execution of " + getDelayInMicroS()/1000 + " ms, exitcode " + returnCode + ", output: \n" + message);
 	}
