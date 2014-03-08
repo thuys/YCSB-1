@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-import org.apache.lucene.analysis.hunspell.HunspellStemmer.Stem;
-
 import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
 
 public class YCSBEvent implements Runnable {
