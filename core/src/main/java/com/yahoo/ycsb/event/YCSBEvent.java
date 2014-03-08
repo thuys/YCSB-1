@@ -5,19 +5,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import org.apache.lucene.analysis.hunspell.HunspellStemmer.Stem;
+
 import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
 
-public class YCSBEvent implements Runnable{
+public class YCSBEvent implements Runnable {
 	private final String id;
 	private final long startExecutingInMS;
-	private final String commands;	
-	
+	private final String commands;
+
 	private long delayInMicros;
 	private int returnCode;
-	
+
 	private boolean isStarted;
 	private boolean isExecuted;
-
 
 	public YCSBEvent(String id, long startExecutingInMS, String commands) {
 		this.id = id;
@@ -33,8 +34,6 @@ public class YCSBEvent implements Runnable{
 		return isExecuted;
 	}
 
-
-
 	public String getId() {
 		return id;
 	}
@@ -47,7 +46,6 @@ public class YCSBEvent implements Runnable{
 		return commands;
 	}
 
-
 	public int getReturnCode() {
 		return returnCode;
 	}
@@ -56,89 +54,92 @@ public class YCSBEvent implements Runnable{
 		return isStarted;
 	}
 
-
 	@Override
 	public String toString() {
 		return "YCSBEvent [id=" + id + ", startExecutingInMS="
 				+ startExecutingInMS + ", commands=" + commands
-				+ ", delayInMicros=" + delayInMicros + ", returnCode=" + returnCode
-				+ ", isStarted=" + isStarted + ", isExecuted=" + isExecuted
-				+ "]";
+				+ ", delayInMicros=" + delayInMicros + ", returnCode="
+				+ returnCode + ", isStarted=" + isStarted + ", isExecuted="
+				+ isExecuted + "]";
 	}
 
 	@Override
 	public void run() {
-		System.err.println("EVENT" + ", " + getStartExecutingInMS()/1000 + " sec, "
-				+ getId() + ", START");
+		System.err.println("EVENT" + ", " + getStartExecutingInMS() / 1000
+				+ " sec, " + getId() + ", START");
 		long startTime = System.nanoTime();
 		isStarted = true;
 		Runtime rt = Runtime.getRuntime();
 		Process pr = null;
-		StreamWrapper stream = null;
 		String message = "";
-		
+		String errorMessage = "";
 		try {
 			pr = rt.exec(commands);
-			stream = new StreamWrapper(pr.getInputStream(), "");
+			StreamWrapper stream = new StreamWrapper(pr.getInputStream(), "");
+			StreamWrapper errorStream = stream = new StreamWrapper(
+					pr.getErrorStream(), "");
 			returnCode = pr.waitFor();
 			stream.run();
-			message =  stream.getMessage();
+			message = stream.getMessage();
+			errorMessage = errorStream.getMessage();
 		} catch (IOException e) {
 			returnCode = -99;
-		}catch(InterruptedException e){
+		} catch (InterruptedException e) {
 			returnCode = -999;
-		}finally{
-			try{
+		} finally {
+			try {
 				pr.destroy();
-			}catch(Exception e){}
+			} catch (Exception e) {
+			}
 		}
-		
+
 		long endTime = System.nanoTime();
-		
-		delayInMicros = (endTime-startTime)/1000;
+
+		delayInMicros = (endTime - startTime) / 1000;
 		isExecuted = true;
-		
-		System.err.println("EVENT" + ", " + getStartExecutingInMS()/1000 + " sec, "
-				+ getId() + ", STOP, execution of " + getDelayInMicroS()/1000 + " ms, exitcode " + returnCode + ", output: \n" + message);
+
+		System.err.println("EVENT" + ", " + getStartExecutingInMS() / 1000
+				+ " sec, " + getId() + ", STOP, execution of "
+				+ getDelayInMicroS() / 1000 + " ms, exitcode " + returnCode
+				+ ", output: \n" + message + "\n Error: \n" + errorMessage);
 	}
 
 	public void log(MeasurementsExporter exporter) throws IOException {
-		exporter.writeEvent(id, startExecutingInMS, delayInMicros, isStarted, isExecuted, returnCode);
-		
+		exporter.writeEvent(id, startExecutingInMS, delayInMicros, isStarted,
+				isExecuted, returnCode);
+
 	}
 
 	private class StreamWrapper {
-	    InputStream is = null;
-	    String type = null;          
-	    String message = null;
-	 
-	    public String getMessage() {
-	            return message;
-	    }
-	 
-	    StreamWrapper(InputStream is, String type) {
-	        this.is = is;
-	        this.type = type;
-	    }
-	 
-	    public void run() {
-	        try {
-	            BufferedReader br = new BufferedReader(new InputStreamReader(is));
-	            StringBuffer buffer = new StringBuffer();
-	            String line = null;
-	            while ( (line = br.readLine()) != null) {
-	                buffer.append(line);//.append("\n");
-	            }
-	            message = buffer.toString();
-	            is.close();
-	            br.close();
-	            
-	        } catch (IOException ioe) {
-	            ioe.printStackTrace();  
-	        }
-	    }
+		InputStream is = null;
+		String type = null;
+		String message = null;
+
+		public String getMessage() {
+			return message;
+		}
+
+		StreamWrapper(InputStream is, String type) {
+			this.is = is;
+			this.type = type;
+		}
+
+		public void run() {
+			try {
+				BufferedReader br = new BufferedReader(
+						new InputStreamReader(is));
+				StringBuffer buffer = new StringBuffer();
+				String line = null;
+				while ((line = br.readLine()) != null) {
+					buffer.append(line);// .append("\n");
+				}
+				message = buffer.toString();
+				is.close();
+				br.close();
+
+			} catch (IOException ioe) {
+				ioe.printStackTrace();
+			}
+		}
 	}
 }
-
-
-
