@@ -9,7 +9,7 @@ public class YCSBEvent implements Runnable{
 	private final long startExecutingInMS;
 	private final String commands;	
 	
-	private long delayIn탎;
+	private long delayInMicros;
 	private int returnCode;
 	
 	private boolean isStarted;
@@ -17,14 +17,13 @@ public class YCSBEvent implements Runnable{
 
 
 	public YCSBEvent(String id, long startExecutingInMS, String commands) {
-		super();
 		this.id = id;
 		this.startExecutingInMS = startExecutingInMS;
 		this.commands = commands;
 	}
 
-	public long getDelayIn탎() {
-		return delayIn탎;
+	public long getDelayInMicroS() {
+		return delayInMicros;
 	}
 
 	public boolean isExecuted() {
@@ -59,7 +58,7 @@ public class YCSBEvent implements Runnable{
 	public String toString() {
 		return "YCSBEvent [id=" + id + ", startExecutingInMS="
 				+ startExecutingInMS + ", commands=" + commands
-				+ ", delayIn탎=" + delayIn탎 + ", returnCode=" + returnCode
+				+ ", delayInMicros=" + delayInMicros + ", returnCode=" + returnCode
 				+ ", isStarted=" + isStarted + ", isExecuted=" + isExecuted
 				+ "]";
 	}
@@ -87,14 +86,14 @@ public class YCSBEvent implements Runnable{
 		
 		long endTime = System.nanoTime();
 		
-		delayIn탎 = (endTime-startTime)/1000;
+		delayInMicros = (endTime-startTime)/1000;
 		isExecuted = true;
 		System.err.println("EVENT" + ", " + getStartExecutingInMS()/1000 + " sec, "
-				+ getId() + ", STOP, execution of " + getDelayIn탎()/1000 + " ms, exitcode " + returnCode);
+				+ getId() + ", STOP, execution of " + getDelayInMicroS()/1000 + " ms, exitcode " + returnCode);
 	}
 
 	public void log(MeasurementsExporter exporter) throws IOException {
-		exporter.writeEvent(id, startExecutingInMS, delayIn탎, isStarted, isExecuted, returnCode);
+		exporter.writeEvent(id, startExecutingInMS, delayInMicros, isStarted, isExecuted, returnCode);
 		
 	}
 
