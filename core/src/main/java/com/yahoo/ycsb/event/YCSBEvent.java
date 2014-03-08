@@ -77,6 +77,7 @@ public class YCSBEvent implements Runnable {
 			StreamWrapper errorStream = stream = new StreamWrapper(
 					pr.getErrorStream(), "");
 			returnCode = pr.waitFor();
+			
 			stream.run();
 			message = stream.getMessage();
 			errorMessage = errorStream.getMessage();
@@ -98,8 +99,8 @@ public class YCSBEvent implements Runnable {
 
 		System.err.println("EVENT" + ", " + getStartExecutingInMS() / 1000
 				+ " sec, " + getId() + ", STOP, execution of "
-				+ getDelayInMicroS() / 1000 + " ms, exitcode " + returnCode
-				+ ", output: \n" + message + "\n Error: \n" + errorMessage);
+				+ getDelayInMicroS() / 1000 + " ms, exitcode " + returnCode);
+				//+ ", output: \n" + message + "\n Error: \n" + errorMessage);
 	}
 
 	public void log(MeasurementsExporter exporter) throws IOException {
@@ -132,6 +133,7 @@ public class YCSBEvent implements Runnable {
 					buffer.append(line);// .append("\n");
 				}
 				message = buffer.toString();
+				
 				is.close();
 				br.close();
 
