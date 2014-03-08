@@ -58,8 +58,10 @@ public class YCSBEventController {
 	public void waitTillAllEventsAreFinished() {
 		boolean isDone = false;
 		do{
+			isDone = true;
 			for(YCSBEvent event : eventSet){
 				isDone &= event.isExecuted();
+				
 			}
 			try {
 			    Thread.sleep(100);
