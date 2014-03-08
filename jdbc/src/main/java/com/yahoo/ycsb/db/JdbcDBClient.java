@@ -348,7 +348,7 @@ public class JdbcDBClient extends DB implements JdbcDBClientConstants {
     select.append(" WHERE ");
     select.append(PRIMARY_KEY);
     select.append(" >= ");
-    select.append("?;");
+    select.append("? LIMIT 0, ?;");
     PreparedStatement scanStatement = getShardConnectionByKey(key).prepareStatement(select.toString());
     if (this.jdbcFetchSize != null) scanStatement.setFetchSize(this.jdbcFetchSize);
     PreparedStatement stmt = cachedStatements.putIfAbsent(scanType, scanStatement);
@@ -417,6 +417,7 @@ public class JdbcDBClient extends DB implements JdbcDBClientConstants {
         scanStatement = createAndCacheScanStatement(type, startKey);
       }
       scanStatement.setString(1, startKey);
+      scanStatement.setInt(2, recordcount);
       //System.out.println("Scan: " + scanStatement.toString());
 
       ResultSet resultSet = scanStatement.executeQuery();
