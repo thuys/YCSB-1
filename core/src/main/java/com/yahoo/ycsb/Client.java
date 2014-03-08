@@ -17,10 +17,16 @@
 
 package com.yahoo.ycsb;
 
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.Properties;
+import java.util.Vector;
 
+import com.yahoo.ycsb.event.YCSBEventController;
 import com.yahoo.ycsb.measurements.Measurements;
 import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
 import com.yahoo.ycsb.measurements.exporter.TextMeasurementsExporter;
@@ -372,6 +378,7 @@ public class Client {
 		return true;
 	}
 
+
 	/**
 	 * Exports the measurements to either sysout or a file using the exporter
 	 * loaded from conf.
@@ -380,7 +387,7 @@ public class Client {
 	 *             Either failed to write to output stream or failed to close
 	 *             it.
 	 */
-	private static void exportMeasurements(Properties props, int opcount,
+	private static void exportMeasurements(Properties props, YCSBEventController eventController, int opcount,
 			long runtime) throws IOException {
 		MeasurementsExporter exporter = null;
 		try {
@@ -414,14 +421,15 @@ public class Client {
 			exporter.write("OVERALL", "Throughput(ops/sec)", throughput);
 
 			Measurements.getMeasurements().exportMeasurements(exporter);
+			if(eventController != null){
+				eventController.log(exporter);
+			}
 		} finally {
 			if (exporter != null) {
 				exporter.close();
 			}
 		}
 	}
-
-	@SuppressWarnings("unchecked")
 	public static void main(String[] args) {
 		String dbname;
 		Properties props = new Properties();
@@ -431,6 +439,7 @@ public class Client {
 		int target = 0;
 		boolean status = false;
 		String label = "";
+		
 
 		// parse arguments
 		int argindex = 0;
@@ -680,6 +689,12 @@ public class Client {
 			statusthread = new StatusThread(threads, label, standardstatus);
 			statusthread.start();
 		}
+		
+		YCSBEventController eventController = null;
+		
+		if(props.containsKey("eventFile")){
+			eventController = new YCSBEventController(props.getProperty("eventFile"));
+		}
 
 		long st = System.currentTimeMillis();
 
@@ -687,11 +702,14 @@ public class Client {
 			t.start();
 		}
 
+		if(eventController != null){
+			eventController.start();
+		}
 		Thread terminator = null;
 
 		if (maxExecutionTime > 0) {
 			terminator = new TerminatorThread(maxExecutionTime, threads,
-					workload);
+					workload, eventController);
 			terminator.start();
 		}
 
@@ -705,6 +723,10 @@ public class Client {
 			}
 		}
 
+		//Here we wait till last event has happened & finished
+		if(eventController != null){
+			eventController.waitTillAllEventsAreFinished();
+		}
 		long en = System.currentTimeMillis();
 
 		if (terminator != null && !terminator.isInterrupted()) {
@@ -724,7 +746,7 @@ public class Client {
 		}
 
 		try {
-			exportMeasurements(props, opsDone, en - st);
+			exportMeasurements(props, eventController,  opsDone, en - st);
 		} catch (IOException e) {
 			System.err.println("Could not export measurements, error: "
 					+ e.getMessage());

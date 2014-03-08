@@ -28,7 +28,7 @@ public class TextMeasurementsExporter implements MeasurementsExporter
 {
 
   private BufferedWriter bw;
-
+  private boolean hasWrittenEvent = false;
   public TextMeasurementsExporter(OutputStream os)
   {
     this.bw = new BufferedWriter(new OutputStreamWriter(os));
@@ -50,5 +50,17 @@ public class TextMeasurementsExporter implements MeasurementsExporter
   {
     this.bw.close();
   }
+
+  	@Override
+	public void writeEvent(String id, long startTimeInMs, long delayInMs,
+			boolean isStarted, boolean isExecuted, int exitCode) throws IOException {
+  		if(!hasWrittenEvent){
+  		    bw.write("[EVENT], ID, Start in ms, Delay in ms, Has been started, Has finished execution, exit code");
+  		    bw.newLine();
+  			hasWrittenEvent = true;
+  		}
+	    bw.write("[EVENT], " + id + ", " + startTimeInMs + ", " + delayInMs + ", " + isStarted + ", " + isExecuted + ", " + exitCode);
+	    bw.newLine();
+	}
 
 }

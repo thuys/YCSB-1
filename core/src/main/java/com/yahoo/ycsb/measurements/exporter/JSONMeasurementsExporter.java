@@ -68,4 +68,19 @@ public class JSONMeasurementsExporter implements MeasurementsExporter
     }
   }
 
+@Override
+public void writeEvent(String id, long startTimeInMs, long delayInMs,
+		boolean isStarted, boolean isExecuted, int exitCode) throws IOException{
+    g.writeStartObject();
+    g.writeStringField("metric", "EVENT");
+    g.writeStringField("id", id);
+    g.writeNumberField("startTimeInMS", startTimeInMs);
+    g.writeNumberField("delayInMs", delayInMs);
+    g.writeBooleanField("isStarted", isStarted);
+    g.writeBooleanField("isExecuted", isExecuted);
+    g.writeNumberField("exitCode", exitCode);
+    g.writeEndObject();
+	
+}
+
 }

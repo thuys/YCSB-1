@@ -17,6 +17,9 @@
 package com.yahoo.ycsb;
 
 import java.util.Vector;
+import java.util.concurrent.TimeUnit;
+
+import com.yahoo.ycsb.event.YCSBEventController;
 
 /**
  * A thread that waits for the maximum specified time and then interrupts all the client
@@ -33,13 +36,15 @@ public class TerminatorThread extends Thread {
   private long maxExecutionTime;
   private Workload workload;
   private long waitTimeOutInMS;
+  private YCSBEventController eventController;
   
   public TerminatorThread(long maxExecutionTime, Vector<Thread> threads, 
-      Workload workload) {
+      Workload workload, YCSBEventController eventController) {
     this.maxExecutionTime = maxExecutionTime;
     this.threads = threads;
     this.workload = workload;
     waitTimeOutInMS = 2000;
+    this.eventController =  eventController;
     System.err.println("Maximum execution time specified as: " + maxExecutionTime + " secs");
   }
   
@@ -52,6 +57,9 @@ public class TerminatorThread extends Thread {
     }
     System.err.println("Maximum time elapsed. Requesting stop for the workload.");
     workload.requestStop();
+    if(eventController != null){
+    	eventController.stopStartingNewTasks();
+    }
     System.err.println("Stop requested for workload. Now Joining!");
     for (Thread t : threads) {
       while (t.isAlive()) {
@@ -65,6 +73,9 @@ public class TerminatorThread extends Thread {
           // Do nothing. Don't know why I was interrupted.
         }
       }
+    }
+    if(eventController != null){
+    	eventController.end(waitTimeOutInMS, TimeUnit.MILLISECONDS);
     }
   }
 }
