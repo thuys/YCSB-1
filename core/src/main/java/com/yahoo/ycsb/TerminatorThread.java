@@ -16,6 +16,7 @@
  */
 package com.yahoo.ycsb;
 
+import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 
@@ -34,15 +35,15 @@ public class TerminatorThread extends Thread {
   
   private Vector<Thread> threads;
   private long maxExecutionTime;
-  private Workload workload;
+  private List<Workload> workloads;
   private long waitTimeOutInMS;
   private YCSBEventController eventController;
   
   public TerminatorThread(long maxExecutionTime, Vector<Thread> threads, 
-      Workload workload, YCSBEventController eventController) {
+		  List<Workload> workloads, YCSBEventController eventController) {
     this.maxExecutionTime = maxExecutionTime;
     this.threads = threads;
-    this.workload = workload;
+    this.workloads = workloads;
     waitTimeOutInMS = 2000;
     this.eventController =  eventController;
     System.err.println("Maximum execution time specified as: " + maxExecutionTime + " secs");
@@ -56,7 +57,7 @@ public class TerminatorThread extends Thread {
       return;
     }
     System.err.println("Maximum time elapsed. Requesting stop for the workload.");
-    workload.requestStop();
+    this.requestStopForWorkloads();
     if(eventController != null){
     	eventController.stopStartingNewTasks();
     }
@@ -66,8 +67,7 @@ public class TerminatorThread extends Thread {
         try {
           t.join(waitTimeOutInMS);
           if (t.isAlive()) {
-            System.err.println("Still waiting for thread " + t.getName() + " to complete. " +
-                "Workload status: " + workload.isStopRequested());
+            System.err.println("Still waiting for thread " + t.getName() + " to complete.");
           }
         } catch (InterruptedException e) {
           // Do nothing. Don't know why I was interrupted.
@@ -78,4 +78,11 @@ public class TerminatorThread extends Thread {
     	eventController.end(waitTimeOutInMS, TimeUnit.MILLISECONDS);
     }
   }
+  
+  private void requestStopForWorkloads(){
+	  for(Workload currentWorkload: workloads){
+		  currentWorkload.requestStop();
+	  }
+  }
+  
 }
