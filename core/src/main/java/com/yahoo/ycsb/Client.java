@@ -829,7 +829,7 @@ public class Client {
 	private static Vector<Thread> createAmountOfThreads(String dbname, Properties props,
 			boolean dotransactions, int threadcount, double targetperthreadperms, List<Workload> workloads, 
 			int opcount, boolean splitOperationOverThreads, int startThreadIdsAt){
-		Vector<Thread> result = new Vector<>();
+		Vector<Thread> result = new Vector<Thread>();
 		for(int i=0; i<threadcount; i++){
 			Thread newThread = createClientThread(dbname, props, dotransactions, threadcount, 
 					targetperthreadperms, workloads.get(i), opcount, startThreadIdsAt + i, splitOperationOverThreads);
