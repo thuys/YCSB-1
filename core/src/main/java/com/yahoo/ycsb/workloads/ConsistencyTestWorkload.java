@@ -3,7 +3,6 @@ package com.yahoo.ycsb.workloads;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
-import java.util.Random;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -17,21 +16,19 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 
 	private static final String START_POINT_PROPERTY = "starttime";
 	private static final String DEFAULT_START_POINT_PROPERTY = "5000";
-	private static final String SEED_PROPERTY = "seed";
-	private static final String DEFAULT_SEED_PROPERTY = "4634514122364";
-	private static final String STRING_CONSISTENCY_DELAY = "consistencyDelay";
+	private static final String CONSISTENCY_DELAY_PROPERTY = "consistencyDelayMillis";
+	private static final String NEW_REQUEST_PERIOD_PROPERTY = "newrequestperiodMillis";
 	
 	ScheduledThreadPoolExecutor executor;
 	
-	private Random timepointForOperationGenerator;
 	private long nextTimestamp;
 	private static final String FIELD_WITH_TIMESTAMP = "field0";
 	private int keyCounter;
 	private ConsistencyOneMeasurement oneMeasurement;
 	private long delayBetweenConsistencyChecks;
+	private long newRequestPeriod;
 	
 	public ConsistencyTestWorkload(){
-		this.timepointForOperationGenerator = null;
 		this.nextTimestamp = -1;
 		this.keyCounter = 0;
 		executor = new ScheduledThreadPoolExecutor(1);
@@ -43,22 +40,19 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 		String synchronousClockAsString = p.getProperty("synchronousClock");
 		this.nextTimestamp = this.convertToLong(synchronousClockAsString, "Illegal synchronousClock value") + 
 				this.convertToLong(startTimeAsString, "Property \"" + START_POINT_PROPERTY + "\" should be an integer number");
-		String seedAsString = p.getProperty(SEED_PROPERTY, DEFAULT_SEED_PROPERTY);
-		long seed = this.convertToLong(seedAsString, "Property \"" + SEED_PROPERTY + "\" should be an integer");
-		this.timepointForOperationGenerator = new Random(seed);
 		this.keyCounter = 0;
 		
-		if(!p.containsKey(STRING_CONSISTENCY_DELAY)){
-			throw new WorkloadException("Not consistency delay defined: " + STRING_CONSISTENCY_DELAY);
+		if(!p.containsKey(CONSISTENCY_DELAY_PROPERTY)){
+			throw new WorkloadException("Not consistency delay defined: " + CONSISTENCY_DELAY_PROPERTY);
 		}
-		this.delayBetweenConsistencyChecks = this.convertToLong(p.getProperty(STRING_CONSISTENCY_DELAY), 
-				"Property \"" + STRING_CONSISTENCY_DELAY + "\" should be an long number");
+		this.delayBetweenConsistencyChecks = 1000*this.convertToLong(p.getProperty(CONSISTENCY_DELAY_PROPERTY), 
+				"Property \"" + CONSISTENCY_DELAY_PROPERTY + "\" should be an long number");
+		this.newRequestPeriod = 1000*this.convertToLong(p.getProperty(NEW_REQUEST_PERIOD_PROPERTY), 
+				"Property \"" + NEW_REQUEST_PERIOD_PROPERTY + "\" should be an long number");
 	}
 	
 	private void updateTimestamp(){
-		// Move timestamp with value in [1,10] seconds
-		// TODO: make interval adjustable
-		this.nextTimestamp = this.nextTimestamp + ((this.timepointForOperationGenerator.nextInt(10)+1)*1000);
+		this.nextTimestamp = this.nextTimestamp + this.newRequestPeriod;
 	}
 	
 	HashMap<String, ByteIterator> buildValues(){
@@ -100,25 +94,26 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 		fields.add(FIELD_WITH_TIMESTAMP);
 		
 		long initialDelay = this.nextTimestamp - System.nanoTime()/1000;
+		final long expectedValue = this.nextTimestamp;
 		executor.scheduleWithFixedDelay(new Runnable() {
 			
 			@Override
 			public void run() {
+				// TODO: check of meting in measurement interval ligt
 				boolean consistencyReached = false;
 				HashMap<String, ByteIterator> readResult = new HashMap<String,ByteIterator>();
 				db.read(table, keyname,fields, readResult);
-				consistencyReached = isConsistencyReached(readResult);
+				consistencyReached = isConsistencyReached(readResult, expectedValue);
 				if(consistencyReached){
 					long time = Long.parseLong(readResult.get(FIELD_WITH_TIMESTAMP).toString());
 					long delay = System.nanoTime()/1000 - time;
 					System.err.println("consistency reached!!!");
 					
-					oneMeasurement.addMeasurement(time, delay/1000);
+					//TODO: hacking in de client
+					oneMeasurement.addMeasurement(time, delay);
 					
 					// Remove 
 					executor.remove(this);
-					
-					
 				}
 				//TODO Check for time out
 			}
@@ -127,7 +122,7 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 	}
 	
 	
-	private boolean isConsistencyReached(HashMap<String, ByteIterator> readResult){
+	private boolean isConsistencyReached(HashMap<String, ByteIterator> readResult, long expectedValue){
 		ByteIterator readValueAsByteIterator = readResult.get(FIELD_WITH_TIMESTAMP);
 		if(readValueAsByteIterator == null){
 			return false;
@@ -149,30 +144,24 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 		throw new UnsupportedOperationException("update not supported");
 	}
 
-	public void doTransactionInsert(DB db){
+	public void doTransactionInsert(final DB db){
 		int keynum= nextKeynum();
-		String dbkey = buildKeyName(keynum);
-		HashMap<String, ByteIterator> values = buildValues();
-		this.sleepUntilTimestampReached(this.nextTimestamp);
-		///////////
-		System.err.println("WRITER_THREAD: inserting values: " + values +  " for key: " + dbkey);
-		///////////
-		db.insert(table,dbkey,values);
-		this.updateTimestamp();
-	}
-	
-	private void sleepUntilTimestampReached(long timestamp){
-		long sleepTime = timestamp - System.currentTimeMillis();
-		/////////
-		System.err.println("sleep during: " + sleepTime + ", waiting for timestamp: " + timestamp);
-		/////////
-		if(sleepTime > 0){
-			try {
-				Thread.sleep(sleepTime);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+		final String dbkey = buildKeyName(keynum);
+		final HashMap<String, ByteIterator> values = buildValues();
+		
+		long sleepTime = this.nextTimestamp - (System.nanoTime()/1000);
+		executor.schedule(new Runnable() {
+			
+			@Override
+			public void run() {
+				///////////
+				System.err.println("WRITER_THREAD: inserting values: " + values +  " for key: " + dbkey);
+				///////////
+				db.insert(table,dbkey,values);
 			}
-		}
+		}, sleepTime, TimeUnit.MICROSECONDS);
+		
+		this.updateTimestamp();
 	}
 
 	public ConsistencyOneMeasurement getOneMeasurement() {
