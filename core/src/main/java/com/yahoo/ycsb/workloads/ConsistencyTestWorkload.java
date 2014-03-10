@@ -119,7 +119,7 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 						// Remove
 						executor.remove(this);
 					}
-				} catch (Exception e) {
+				} catch (Throwable e) {
 					e.printStackTrace();
 				}
 				//TODO Check for time out
@@ -172,7 +172,7 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 							+ values + " for key: " + dbkey);
 					// /////////
 					db.insert(table, dbkey, values);
-				} catch (Exception e) {
+				} catch (Throwable e) {
 					e.printStackTrace();
 				}
 			}
