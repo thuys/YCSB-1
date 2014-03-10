@@ -99,21 +99,28 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 			
 			@Override
 			public void run() {
-				// TODO: check of meting in measurement interval ligt
-				boolean consistencyReached = false;
-				HashMap<String, ByteIterator> readResult = new HashMap<String,ByteIterator>();
-				db.read(table, keyname,fields, readResult);
-				consistencyReached = isConsistencyReached(readResult, expectedValue);
-				if(consistencyReached){
-					long time = Long.parseLong(readResult.get(FIELD_WITH_TIMESTAMP).toString());
-					long delay = System.nanoTime()/1000 - time;
-					System.err.println("consistency reached!!!");
-					
-					//TODO: hacking in de client
-					oneMeasurement.addMeasurement(time, delay);
-					
-					// Remove 
-					executor.remove(this);
+				try {
+					// TODO: check of meting in measurement interval ligt
+					boolean consistencyReached = false;
+					HashMap<String, ByteIterator> readResult = new HashMap<String, ByteIterator>();
+					db.read(table, keyname, fields, readResult);
+					consistencyReached = isConsistencyReached(readResult,
+							expectedValue);
+					if (consistencyReached) {
+						long time = Long.parseLong(readResult.get(
+								FIELD_WITH_TIMESTAMP).toString());
+						long delay = System.nanoTime() / 1000 - time;
+						
+						System.err.println("consistency reached!!!");
+
+						// TODO: hacking in de client
+						oneMeasurement.addMeasurement(time, delay);
+
+						// Remove
+						executor.remove(this);
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 				//TODO Check for time out
 			}
@@ -127,6 +134,9 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 		if(readValueAsByteIterator == null){
 			return false;
 		}
+		
+		System.err.println(readValueAsByteIterator.toString());
+		
 		long readValue= Long.parseLong(readValueAsByteIterator.toString());
 		return (this.nextTimestamp == readValue);
 	}
