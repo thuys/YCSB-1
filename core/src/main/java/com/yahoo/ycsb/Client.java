@@ -629,7 +629,7 @@ public class Client {
 
 		
 		int opcount = calculateOpcount(fileprops, dotransactions);	
-		props.setProperty("synchronousClock", Long.toString(System.currentTimeMillis()));
+		props.setProperty("synchronousClock", Long.toString(System.nanoTime()));
 		////////////////////////////////////////////////////////////
 		Vector<Thread> threads = null;
 		try {
