@@ -17,7 +17,7 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 	private static final String START_POINT_PROPERTY = "starttime";
 	private static final String DEFAULT_START_POINT_PROPERTY = "5000";
 	private static final String CONSISTENCY_DELAY_PROPERTY = "consistencyDelayMillis";
-	private static final String NEW_REQUEST_PERIOD_PROPERTY = "newrequestperiodMillis";
+	public static final String NEW_REQUEST_PERIOD_PROPERTY = "newrequestperiodMillis";
 	
 	ScheduledThreadPoolExecutor executor;
 	
@@ -132,6 +132,7 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 	private boolean isConsistencyReached(HashMap<String, ByteIterator> readResult, long expectedValue){
 		ByteIterator readValueAsByteIterator = readResult.get(FIELD_WITH_TIMESTAMP);
 		if(readValueAsByteIterator == null){
+			System.err.println("expected: null " + expectedValue);
 			return false;
 		}
 		System.err.println("expected: " + expectedValue);
@@ -164,10 +165,15 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 			
 			@Override
 			public void run() {
-				///////////
-				System.err.println("WRITER_THREAD: inserting values: " + values +  " for key: " + dbkey);
-				///////////
-				db.insert(table,dbkey,values);
+				try {
+					// /////////
+					System.err.println("WRITER_THREAD: inserting values: "
+							+ values + " for key: " + dbkey);
+					// /////////
+					db.insert(table, dbkey, values);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 		}, sleepTime, TimeUnit.MICROSECONDS);
 		

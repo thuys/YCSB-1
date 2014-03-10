@@ -775,7 +775,15 @@ public class Client {
 		newProp.setProperty(CoreWorkload.INSERT_PROPORTION_PROPERTY, "1");
 		newProp.setProperty(CoreWorkload.SCAN_PROPORTION_PROPERTY, "0");
 		newProp.setProperty(CoreWorkload.READMODIFYWRITE_PROPORTION_PROPERTY, "0");
+		addTargetToConsistencyWorkload(newProp);
 		return createWorkload(newProp, workloadclass);
+	}
+
+	private static void addTargetToConsistencyWorkload(Properties newProp) {
+		double dummy = Long.parseLong(newProp.getProperty(ConsistencyTestWorkload.NEW_REQUEST_PERIOD_PROPERTY));
+		dummy = 1/dummy*0.9;
+		dummy = Math.floor(dummy);
+		newProp.setProperty("target", Double.toString(dummy));
 	}
 	
 	private static List<Workload> getReaderWorkloads(Properties prop, Class workloadclass, int amount, ConsistencyMeasurements measurements){
@@ -787,9 +795,9 @@ public class Client {
 			newProp.setProperty(CoreWorkload.INSERT_PROPORTION_PROPERTY, "0");
 			newProp.setProperty(CoreWorkload.SCAN_PROPORTION_PROPERTY, "0");
 			newProp.setProperty(CoreWorkload.READMODIFYWRITE_PROPORTION_PROPERTY, "0");
+			addTargetToConsistencyWorkload(newProp);
 			ConsistencyTestWorkload workload = (ConsistencyTestWorkload) createWorkload(newProp, workloadclass); 
 			result.add(workload);
-
 			ConsistencyOneMeasurement measurement = measurements.getNewConsistencyOneMeasurement();
 			workload.setOneMeasurement(measurement);
 		}
