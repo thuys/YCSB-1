@@ -110,6 +110,7 @@ public class ConsistencyMeasurements {
 	}
 
 	public void export(Properties props) {
+		System.err.println("STARTING TO EXPORT");
 		if(props.contains(INSERT_MATRIX_PROPERTY)){
 			try {
 				PrintWriter out = new PrintWriter(props.getProperty(INSERT_MATRIX_PROPERTY));
@@ -118,6 +119,7 @@ public class ConsistencyMeasurements {
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			}
+			System.err.println("ENDING EXPORT");
 		}
 		
 	}
