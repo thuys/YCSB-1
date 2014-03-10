@@ -123,6 +123,7 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 					e.printStackTrace();
 				}
 				//TODO Check for time out
+				System.err.println("READ RUN FINISHED");
 			}
 		}, initialDelay, delayBetweenConsistencyChecks, TimeUnit.MICROSECONDS);
 		this.updateTimestamp();

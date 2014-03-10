@@ -796,6 +796,7 @@ public class Client {
 			newProp.setProperty(CoreWorkload.SCAN_PROPORTION_PROPERTY, "0");
 			newProp.setProperty(CoreWorkload.READMODIFYWRITE_PROPORTION_PROPERTY, "0");
 			addTargetToConsistencyWorkload(newProp);
+			//TODO: resetten van target
 			ConsistencyTestWorkload workload = (ConsistencyTestWorkload) createWorkload(newProp, workloadclass); 
 			result.add(workload);
 			ConsistencyOneMeasurement measurement = measurements.getNewConsistencyOneMeasurement();
