@@ -744,10 +744,10 @@ public class Client {
 			int amountOfReadThreads = getAmountOfReadThreads(props);
 			Workload writerWorkload = getWriterWorkload(props, workloadclass);
 			List<Workload> readerWorkloads = getReaderWorkloads(props, workloadclass, amountOfReadThreads, measurements);
-			threads = createAmountOfThreads(dbname, props, dotransactions, amountOfReadThreads, targetperthreadperms, 
+			threads = createAmountOfThreads(dbname, props, dotransactions, amountOfReadThreads, getTargetToConsistencyWorkload(props), 
 															readerWorkloads, opcount, false, threadCounter);
 			threadCounter += threads.size();
-			Thread writerThread = createClientThread(dbname, props, dotransactions, 1, targetperthreadperms, 
+			Thread writerThread = createClientThread(dbname, props, dotransactions, 1, getTargetToConsistencyWorkload(props), 
 												writerWorkload, opcount, threadCounter++, false);
 			
 			threads.add(writerThread);
@@ -775,15 +775,13 @@ public class Client {
 		newProp.setProperty(CoreWorkload.INSERT_PROPORTION_PROPERTY, "1");
 		newProp.setProperty(CoreWorkload.SCAN_PROPORTION_PROPERTY, "0");
 		newProp.setProperty(CoreWorkload.READMODIFYWRITE_PROPORTION_PROPERTY, "0");
-		addTargetToConsistencyWorkload(newProp);
 		return createWorkload(newProp, workloadclass);
 	}
 
-	private static void addTargetToConsistencyWorkload(Properties newProp) {
+	private static double getTargetToConsistencyWorkload(Properties newProp) {
 		double dummy = Long.parseLong(newProp.getProperty(ConsistencyTestWorkload.NEW_REQUEST_PERIOD_PROPERTY));
 		dummy = 1/dummy*0.9;
-		dummy = Math.floor(dummy);
-		newProp.setProperty("target", Double.toString(dummy));
+		return Math.floor(dummy);
 	}
 	
 	private static List<Workload> getReaderWorkloads(Properties prop, Class workloadclass, int amount, ConsistencyMeasurements measurements){
@@ -795,7 +793,6 @@ public class Client {
 			newProp.setProperty(CoreWorkload.INSERT_PROPORTION_PROPERTY, "0");
 			newProp.setProperty(CoreWorkload.SCAN_PROPORTION_PROPERTY, "0");
 			newProp.setProperty(CoreWorkload.READMODIFYWRITE_PROPORTION_PROPERTY, "0");
-			addTargetToConsistencyWorkload(newProp);
 			//TODO: resetten van target
 			ConsistencyTestWorkload workload = (ConsistencyTestWorkload) createWorkload(newProp, workloadclass); 
 			result.add(workload);
