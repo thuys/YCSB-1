@@ -4,11 +4,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Random;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import com.yahoo.ycsb.ByteIterator;
 import com.yahoo.ycsb.DB;
 import com.yahoo.ycsb.StringByteIterator;
 import com.yahoo.ycsb.WorkloadException;
+import com.yahoo.ycsb.measurements.ConsistencyOneMeasurement;
 
 public class ConsistencyTestWorkload extends CoreWorkload {
 
@@ -16,16 +19,22 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 	private static final String DEFAULT_START_POINT_PROPERTY = "5000";
 	private static final String SEED_PROPERTY = "seed";
 	private static final String DEFAULT_SEED_PROPERTY = "4634514122364";
+	private static final String STRING_CONSISTENCY_DELAY = "consistencyDelay";
+	
+	ScheduledThreadPoolExecutor executor;
 	
 	private Random timepointForOperationGenerator;
 	private long nextTimestamp;
 	private static final String FIELD_WITH_TIMESTAMP = "field0";
 	private int keyCounter;
+	private ConsistencyOneMeasurement oneMeasurement;
+	private long delayBetweenConsistencyChecks;
 	
 	public ConsistencyTestWorkload(){
 		this.timepointForOperationGenerator = null;
 		this.nextTimestamp = -1;
 		this.keyCounter = 0;
+		executor = new ScheduledThreadPoolExecutor(1);
 	}
 	
 	public void init(Properties p) throws WorkloadException{
@@ -38,6 +47,12 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 		long seed = this.convertToLong(seedAsString, "Property \"" + SEED_PROPERTY + "\" should be an integer");
 		this.timepointForOperationGenerator = new Random(seed);
 		this.keyCounter = 0;
+		
+		if(!p.containsKey(STRING_CONSISTENCY_DELAY)){
+			throw new WorkloadException("Not consistency delay defined: " + STRING_CONSISTENCY_DELAY);
+		}
+		this.delayBetweenConsistencyChecks = this.convertToLong(p.getProperty(STRING_CONSISTENCY_DELAY), 
+				"Property \"" + STRING_CONSISTENCY_DELAY + "\" should be an long number");
 	}
 	
 	private void updateTimestamp(){
@@ -77,41 +92,40 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 		}
 	}
 	
-	public void doTransactionRead(DB db)
+	public void doTransactionRead(final DB db)
 	{
 		int keynum = nextKeynum();	
-		String keyname = buildKeyName(keynum);
-		HashSet<String> fields = new HashSet<String>();
+		final String keyname = buildKeyName(keynum);
+		final HashSet<String> fields = new HashSet<String>();
 		fields.add(FIELD_WITH_TIMESTAMP);
-		this.sleepUntilTimestampReached(this.nextTimestamp);
-		this.waitForConsistencyToBeReached(db, keyname, fields);
+		
+		long initialDelay = this.nextTimestamp - System.nanoTime()/1000;
+		executor.scheduleWithFixedDelay(new Runnable() {
+			
+			@Override
+			public void run() {
+				boolean consistencyReached = false;
+				HashMap<String, ByteIterator> readResult = new HashMap<String,ByteIterator>();
+				db.read(table, keyname,fields, readResult);
+				consistencyReached = isConsistencyReached(readResult);
+				if(consistencyReached){
+					long time = Long.parseLong(readResult.get(FIELD_WITH_TIMESTAMP).toString());
+					long delay = System.nanoTime()/1000 - time;
+					System.err.println("consistency reached!!!");
+					
+					oneMeasurement.addMeasurement(time, delay/1000);
+					
+					// Remove 
+					executor.remove(this);
+					
+					
+				}
+				//TODO Check for time out
+			}
+		}, initialDelay, delayBetweenConsistencyChecks, TimeUnit.MICROSECONDS);
 		this.updateTimestamp();
 	}
 	
-	private void waitForConsistencyToBeReached(DB db, String keyname, HashSet<String> fields){
-		long millisEnteringFunction = System.currentTimeMillis();
-		boolean consistencyReached = false;
-		boolean timeout = false;
-		//////
-		System.err.println("READER_THREAD: reader key " + keyname);
-		//////
-		while(!consistencyReached && !timeout){
-			// TODO: measure delay
-			HashMap<String, ByteIterator> readResult = new HashMap<String,ByteIterator>();
-			db.read(table, keyname,fields, readResult);
-			consistencyReached = isConsistencyReached(readResult);
-			/////////////////////////////
-			if(consistencyReached){
-				System.err.println("consistency reached!!!");
-			}
-			/////////////////////////////
-			timeout = hasTimeoutOccured(millisEnteringFunction);
-		}
-	}
-	
-	private boolean hasTimeoutOccured(long startTime){
-		return ((System.currentTimeMillis() - startTime) > 2000);
-	}
 	
 	private boolean isConsistencyReached(HashMap<String, ByteIterator> readResult){
 		ByteIterator readValueAsByteIterator = readResult.get(FIELD_WITH_TIMESTAMP);
@@ -160,5 +174,27 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 			}
 		}
 	}
+
+	public ConsistencyOneMeasurement getOneMeasurement() {
+		return oneMeasurement;
+	}
+
+	public void setOneMeasurement(int threadID) {
+		this.oneMeasurement = new ConsistencyOneMeasurement(threadID);
+	}
 	
+    public void requestStop() {
+    	super.requestStop();
+    	executor.shutdownNow();
+    }
+	
+    @Override
+    public void cleanup() throws WorkloadException{
+    	super.cleanup();
+    	try {
+			executor.awaitTermination(2000, TimeUnit.MILLISECONDS);
+		} catch (InterruptedException e) {
+			System.err.println("Consistency workload not stopped");
+		}
+    }
 }
