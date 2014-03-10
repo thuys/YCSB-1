@@ -17,12 +17,17 @@ public class ConsistencyMeasurements {
 		allMeasurements.add(measurement);
 	}
 
-	public TreeMap<Long, TreeMap<Integer, Long>> exportMeasurements() {
+	public TreeSet<Long> getAllTimings(){
 		TreeSet<Long> mergedKeys = new TreeSet<Long>();
 
 		for (ConsistencyOneMeasurement measurement : allMeasurements) {
 			mergedKeys.addAll(measurement.getTimes());
 		}
+		return mergedKeys;
+	}
+	
+	public TreeMap<Long, TreeMap<Integer, Long>> exportMeasurements() {
+		TreeSet<Long> mergedKeys = getAllTimings();
 
 		TreeMap<Long, TreeMap<Integer, Long>> result = new TreeMap<Long, TreeMap<Integer, Long>>();
 		for (Long time : mergedKeys) {
@@ -30,7 +35,7 @@ public class ConsistencyMeasurements {
 			for (ConsistencyOneMeasurement measurement : allMeasurements) {
 				if (measurement.hasDelay(time))
 					timeMap.put(measurement.getThreadNumber(),
-							measurement.getDelay(time));
+							measurement.getLastDelay(time));
 
 				result.put(time, timeMap);
 			}
@@ -39,8 +44,27 @@ public class ConsistencyMeasurements {
 		return result;
 	}
 	
-	public String exportAsString(){
-		TreeMap<Long, TreeMap<Integer, Long>> map = exportMeasurements();
+	public String exportLastDelaysAsMatrix(){
+		return exportString(new ExportDelay() {
+			
+			@Override
+			public String export(Long time, ConsistencyOneMeasurement measurement) {
+				return Long.toString(measurement.getLastDelay(time));
+			}
+		});
+	}
+	
+	public String exportNbOfDifferentDelaysAsMatrix(){
+		return exportString(new ExportDelay() {
+			
+			@Override
+			public String export(Long time, ConsistencyOneMeasurement measurement) {
+				return Integer.toString(measurement.getNumberOfDelays(time));
+			}
+		});
+	}
+	
+	private String exportString(ExportDelay export){
 		String output = "";
 		
 		// First line with header
@@ -53,12 +77,11 @@ public class ConsistencyMeasurements {
 		}
 		output += "\n";
 		
-		for(Long time : map.keySet()){
+		for(Long time :getAllTimings()){
 			output += time + SEPERATOR;
-			TreeMap<Integer, Long> innerMap = map.get(time);
-			for(Integer threadId : threadIds){
-				if(innerMap.containsKey(threadId)){
-					output += innerMap.get(threadId);
+			for(ConsistencyOneMeasurement measurement : allMeasurements){
+				if(measurement.hasDelay(time)){
+					output += export.export(time, measurement);
 				}
 				output += SEPERATOR;
 			}
@@ -67,5 +90,16 @@ public class ConsistencyMeasurements {
 		}
 		
 		return output;
+	}
+	
+	public ConsistencyOneMeasurement getNewConsistencyOneMeasurement(){
+		ConsistencyOneMeasurement result = new ConsistencyOneMeasurement(allMeasurements.size());
+		
+		allMeasurements.add(result);
+		return result;
+	}
+	
+	private interface ExportDelay{
+		public String export(Long time, ConsistencyOneMeasurement measurement);
 	}
 }
