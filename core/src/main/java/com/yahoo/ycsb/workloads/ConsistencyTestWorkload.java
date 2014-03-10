@@ -141,7 +141,7 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 		System.err.println("queue: " + executor.getTaskCount());
 		
 		long readValue= Long.parseLong(readValueAsByteIterator.toString());
-		return (this.nextTimestamp == readValue);
+		return (expectedValue == readValue);
 	}
 	
 	public void doTransactionReadModifyWrite(DB db)
