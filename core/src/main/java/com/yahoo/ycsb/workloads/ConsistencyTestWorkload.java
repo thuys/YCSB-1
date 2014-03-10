@@ -168,8 +168,8 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 		return oneMeasurement;
 	}
 
-	public void setOneMeasurement(int threadID) {
-		this.oneMeasurement = new ConsistencyOneMeasurement(threadID);
+	public void setOneMeasurement(ConsistencyOneMeasurement measurement) {
+		this.oneMeasurement = measurement;
 	}
 	
     public void requestStop() {

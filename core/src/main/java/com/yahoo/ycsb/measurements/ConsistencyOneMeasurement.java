@@ -13,7 +13,7 @@ public class ConsistencyOneMeasurement {
 	
 	private int threadNumber;
 	
-	public ConsistencyOneMeasurement(int threadNumber){
+	ConsistencyOneMeasurement(int threadNumber){
 		this.threadNumber = threadNumber;
 		measurementMap = new TreeMap<Long, Stack<Long>>();
 	}

@@ -1,12 +1,18 @@
 package com.yahoo.ycsb.measurements;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.HashSet;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
 public class ConsistencyMeasurements {
 	private Set<ConsistencyOneMeasurement> allMeasurements;
+	
+	private static final String INSERT_MATRIX_PROPERTY = "insertMatrixExportFile";
+	
 	private final static String SEPERATOR = ",";
 
 	public ConsistencyMeasurements() {
@@ -101,5 +107,18 @@ public class ConsistencyMeasurements {
 	
 	private interface ExportDelay{
 		public String export(Long time, ConsistencyOneMeasurement measurement);
+	}
+
+	public void export(Properties props) {
+		if(props.contains(INSERT_MATRIX_PROPERTY)){
+			try {
+				PrintWriter out = new PrintWriter(props.getProperty(INSERT_MATRIX_PROPERTY));
+				out.println(exportLastDelaysAsMatrix());
+				out.close();
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+		}
+		
 	}
 }
