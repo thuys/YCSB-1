@@ -29,9 +29,11 @@ import java.util.Properties;
 import java.util.Vector;
 
 import com.yahoo.ycsb.event.YCSBEventController;
+import com.yahoo.ycsb.measurements.ConsistencyOneMeasurement;
 import com.yahoo.ycsb.measurements.Measurements;
 import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
 import com.yahoo.ycsb.measurements.exporter.TextMeasurementsExporter;
+import com.yahoo.ycsb.workloads.ConsistencyTestWorkload;
 import com.yahoo.ycsb.workloads.CoreWorkload;
 
 //import org.apache.log4j.BasicConfigurator;
@@ -629,7 +631,7 @@ public class Client {
 
 		
 		int opcount = calculateOpcount(fileprops, dotransactions);	
-		props.setProperty("synchronousClock", Long.toString(System.nanoTime()));
+		props.setProperty("synchronousClock", Long.toString(System.nanoTime()/1000));
 		////////////////////////////////////////////////////////////
 		Vector<Thread> threads = null;
 		try {
@@ -782,7 +784,14 @@ public class Client {
 			newProp.setProperty(CoreWorkload.INSERT_PROPORTION_PROPERTY, "0");
 			newProp.setProperty(CoreWorkload.SCAN_PROPORTION_PROPERTY, "0");
 			newProp.setProperty(CoreWorkload.READMODIFYWRITE_PROPORTION_PROPERTY, "0");
-			result.add(createWorkload(newProp, workloadclass));
+			ConsistencyTestWorkload workload = (ConsistencyTestWorkload) createWorkload(newProp, workloadclass); 
+			result.add(workload);
+			////////////////////////////////////////////////////////////////////////
+			// TODO: Pas aan volgens nieuwe consistency interface
+			ConsistencyOneMeasurement measurement = new ConsistencyOneMeasurement(i);
+			workload.setOneMeasurement(i);
+			//TODO: 
+			/////////////////////////////////////////////////////////////////////////
 		}
 		return result;
 	}
