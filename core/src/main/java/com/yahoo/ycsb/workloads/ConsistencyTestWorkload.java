@@ -115,7 +115,7 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 
 						// TODO: hacking in de client
 						oneMeasurement.addMeasurement(time, delay);
-
+						
 						// Remove
 						executor.remove(this);
 					}
@@ -138,6 +138,7 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 		}
 		System.err.println("expected: " + expectedValue);
 		System.err.println("          " + readValueAsByteIterator.toString());
+		System.err.println("queue: " + executor.getTaskCount());
 		
 		long readValue= Long.parseLong(readValueAsByteIterator.toString());
 		return (this.nextTimestamp == readValue);
