@@ -780,8 +780,7 @@ public class Client {
 
 	private static double getTargetToConsistencyWorkload(Properties newProp) {
 		double dummy = Long.parseLong(newProp.getProperty(ConsistencyTestWorkload.NEW_REQUEST_PERIOD_PROPERTY));
-		dummy = 1/dummy*0.9;
-		return Math.floor(dummy);
+		return 1/dummy*0.9;
 	}
 	
 	private static List<Workload> getReaderWorkloads(Properties prop, Class workloadclass, int amount, ConsistencyMeasurements measurements){
