@@ -134,8 +134,8 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 		if(readValueAsByteIterator == null){
 			return false;
 		}
-		
-		System.err.println(readValueAsByteIterator.toString());
+		System.err.println("expected: " + expectedValue);
+		System.err.println("          " + readValueAsByteIterator.toString());
 		
 		long readValue= Long.parseLong(readValueAsByteIterator.toString());
 		return (this.nextTimestamp == readValue);
