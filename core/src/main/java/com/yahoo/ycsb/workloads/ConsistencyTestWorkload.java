@@ -136,11 +136,12 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 			System.err.println("expected: null " + expectedValue);
 			return false;
 		}
+		String temp = readValueAsByteIterator.toString().trim();
 		System.err.println("expected: " + expectedValue);
-		System.err.println("          " + readValueAsByteIterator.toString());
+		System.err.println("          " + temp);
 		System.err.println("queue: " + executor.getTaskCount());
 		
-		long readValue= Long.parseLong(readValueAsByteIterator.toString());
+		long readValue= Long.parseLong(temp);
 		return (expectedValue == readValue);
 	}
 	
