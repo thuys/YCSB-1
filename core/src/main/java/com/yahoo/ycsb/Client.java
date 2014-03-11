@@ -248,7 +248,6 @@ class ClientThread extends Thread {
 						// because it smooths timing inaccuracies (from sleep()
 						// taking an int,
 						// current time in millis) over many operations
-						System.err.println("Start sleep thread: " + this._threadid);
 						while (System.currentTimeMillis() - st < ((double) _opsdone)
 								/ _target) {
 							try {
@@ -258,7 +257,6 @@ class ClientThread extends Thread {
 							}
 
 						}
-						System.err.println("End sleep thread: " + this._threadid);
 					}
 				}
 			} else {
