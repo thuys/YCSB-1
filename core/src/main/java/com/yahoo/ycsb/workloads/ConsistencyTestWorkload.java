@@ -211,6 +211,7 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 		final HashMap<String, ByteIterator> values = buildValues();
 
 		long sleepTime = this.nextTimestamp - (System.nanoTime() / 1000);
+		System.err.println("Planning insert at " + (System.nanoTime() / 1000) + " for " + this.nextTimestamp);
 		executor.schedule(new Runnable() {
 
 			@Override
