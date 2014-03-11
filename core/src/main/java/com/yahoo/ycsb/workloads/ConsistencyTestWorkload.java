@@ -69,7 +69,7 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 	}
 	
 	public String buildKeyName(long keynum) {
-		return "user" + keynum;
+		return "consistency" + keynum;
 	}
 	
 	HashMap<String, ByteIterator> buildUpdate() {
