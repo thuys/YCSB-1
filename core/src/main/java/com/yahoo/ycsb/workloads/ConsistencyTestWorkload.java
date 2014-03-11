@@ -110,8 +110,8 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 						String temp = readValueAsByteIterator.toString().trim();
 						
 						long time= Long.parseLong(temp);
-						System.err.println("          " + temp);
-						System.err.println("queue: " + executor.getTaskCount());
+						//System.err.println("          " + temp);
+						//System.err.println("queue: " + executor.getTaskCount());
 						if(time == expectedValue){
 
 							long delay = System.nanoTime() / 1000 - time;
