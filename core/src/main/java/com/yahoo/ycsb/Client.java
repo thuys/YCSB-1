@@ -779,6 +779,7 @@ public class Client {
 	}
 
 	private static double getTargetToConsistencyWorkload(Properties newProp) {
+		System.err.println("REQUEST_PERIOD: " + newProp.getProperty(ConsistencyTestWorkload.NEW_REQUEST_PERIOD_PROPERTY));
 		double dummy = Long.parseLong(newProp.getProperty(ConsistencyTestWorkload.NEW_REQUEST_PERIOD_PROPERTY));
 		return 1/dummy*0.9;
 	}
