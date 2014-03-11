@@ -100,7 +100,7 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 			@Override
 			public void run() {
 				try {
-					System.err.println("Read run started: (at currentTiming) \n\t" + expectedValue);
+					System.err.println("Read run started: (at " + currentTiming + ") \n\t" + expectedValue);
 					// TODO: check of meting in measurement interval ligt
 					HashMap<String, ByteIterator> readResult = new HashMap<String, ByteIterator>();
 					db.read(table, keyname, fields, readResult);
