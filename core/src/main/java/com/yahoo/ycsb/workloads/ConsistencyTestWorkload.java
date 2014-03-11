@@ -3,6 +3,7 @@ package com.yahoo.ycsb.workloads;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -95,49 +96,73 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 		final long currentTiming = System.nanoTime();
 		long initialDelay = this.nextTimestamp - currentTiming/1000;
 		final long expectedValue = this.nextTimestamp;
-		executor.scheduleWithFixedDelay(new Runnable() {
-			
-			@Override
-			public void run() {
-				try {
-					System.err.println("Read run started: (at " + currentTiming + ") \n\t" + expectedValue);
-					// TODO: check of meting in measurement interval ligt
-					HashMap<String, ByteIterator> readResult = new HashMap<String, ByteIterator>();
-					db.read(table, keyname, fields, readResult);
-					ByteIterator readValueAsByteIterator = readResult.get(FIELD_WITH_TIMESTAMP);
-					
-					if(readValueAsByteIterator != null){
-						String temp = readValueAsByteIterator.toString().trim();
-						
-						long time= Long.parseLong(temp);
-						//System.err.println("          " + temp);
-						//System.err.println("queue: " + executor.getTaskCount());
-						if(time == expectedValue){
-
-							long delay = System.nanoTime() / 1000 - time;
-							
-							System.err.println("consistency reached!!!");
-	
-							// TODO: hacking in de client
-							oneMeasurement.addMeasurement(time, delay);
-							
-							// Remove
-							executor.remove(this);
-						}
-					}else{
-						System.err.println("\t null ");
-					}
-				} catch (Throwable e) {
-					e.printStackTrace();
-				}
-				//TODO Check for time out
-				System.err.println("READ RUN FINISHED");
-			}
-		}, initialDelay, delayBetweenConsistencyChecks, TimeUnit.MICROSECONDS);
+		ReadRunner readrunner = new ReadRunner(currentTiming, expectedValue, keyname, fields, db);
+		ScheduledFuture<?> taskToCancel = executor.scheduleWithFixedDelay(readrunner, initialDelay, delayBetweenConsistencyChecks, TimeUnit.MICROSECONDS);
+		readrunner.setTask(taskToCancel);
 		this.updateTimestamp();
 	}
 	
-	
+	private class ReadRunner implements Runnable{
+		private final long identifier, expectedValue;
+		private final String keyname;
+		final HashSet<String> fields;
+		private final DB db;
+		private ScheduledFuture<?> taskToCancel;
+		
+		public ReadRunner(long identifier, long expectedValue, String keyname,
+				HashSet<String> fields, DB db) {
+			super();
+			this.identifier = identifier;
+			this.expectedValue = expectedValue;
+			this.keyname = keyname;
+			this.fields = fields;
+			this.db = db;
+		}
+
+
+		public void setTask(ScheduledFuture<?> taskToCancel) {
+			this.taskToCancel = taskToCancel;
+		}
+
+
+		@Override
+		public void run() {
+			try {
+				System.err.println("Read run started: (at " + identifier + ") \n\t" + expectedValue);
+				// TODO: check of meting in measurement interval ligt
+				HashMap<String, ByteIterator> readResult = new HashMap<String, ByteIterator>();
+				db.read(table, keyname, fields, readResult);
+				ByteIterator readValueAsByteIterator = readResult.get(FIELD_WITH_TIMESTAMP);
+				
+				if(readValueAsByteIterator != null){
+					String temp = readValueAsByteIterator.toString().trim();
+					
+					long time= Long.parseLong(temp);
+					//System.err.println("          " + temp);
+					//System.err.println("queue: " + executor.getTaskCount());
+					if(time == expectedValue){
+
+						long delay = System.nanoTime() / 1000 - time;
+						
+						System.err.println("consistency reached!!!");
+
+						// TODO: hacking in de client
+						oneMeasurement.addMeasurement(time, delay);
+						
+						// Remove
+						taskToCancel.cancel(false);
+					}
+				}else{
+					System.err.println("\t null ");
+				}
+			} catch (Throwable e) {
+				e.printStackTrace();
+			}
+			//TODO Check for time out
+			System.err.println("READ RUN FINISHED");
+		}
+		
+	}
 //	private boolean isConsistencyReached(HashMap<String, ByteIterator> readResult, long expectedValue){
 //		ByteIterator readValueAsByteIterator = readResult.get(FIELD_WITH_TIMESTAMP);
 //		if(readValueAsByteIterator == null){
