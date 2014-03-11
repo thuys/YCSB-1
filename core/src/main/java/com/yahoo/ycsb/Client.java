@@ -250,6 +250,7 @@ class ClientThread extends Thread {
 						// current time in millis) over many operations
 						while (System.currentTimeMillis() - st < ((double) _opsdone)
 								/ _target) {
+							System.err.println("Sleeping thread: " + this._threadid);
 							try {
 								sleep(1);
 							} catch (InterruptedException e) {
