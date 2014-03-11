@@ -108,7 +108,7 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 							expectedValue);
 					if (consistencyReached) {
 						long time = Long.parseLong(readResult.get(
-								FIELD_WITH_TIMESTAMP).toString());
+								FIELD_WITH_TIMESTAMP).toString().trim());
 						long delay = System.nanoTime() / 1000 - time;
 						
 						System.err.println("consistency reached!!!");
