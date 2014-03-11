@@ -751,11 +751,13 @@ public class Client {
 												writerWorkload, opcount, threadCounter++, false);
 			
 			threads.add(writerThread);
+		//TODO: remove else after test
+		}else{
+			Class workloadclass = classLoader.loadClass(props.getProperty(WORKLOAD_PROPERTY));
+			Workload workload = createWorkload(props, workloadclass);
+			threads.addAll(createAmountOfThreads(dbname, props, dotransactions, threadcount, 
+											targetperthreadperms, workload, opcount, true, threadCounter));
 		}
-		Class workloadclass = classLoader.loadClass(props.getProperty(WORKLOAD_PROPERTY));
-		Workload workload = createWorkload(props, workloadclass);
-		threads.addAll(createAmountOfThreads(dbname, props, dotransactions, threadcount, 
-										targetperthreadperms, workload, opcount, true, threadCounter));
 		return threads;
 	}
 
