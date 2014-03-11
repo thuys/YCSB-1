@@ -87,15 +87,15 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 		}
 	}
 	
-	public void doTransactionRead(final DB db)
+	public void doTransactionRead(DB db)
 	{
 		int keynum = nextKeynum();	
-		final String keyname = buildKeyName(keynum);
-		final HashSet<String> fields = new HashSet<String>();
+		String keyname = buildKeyName(keynum);
+		HashSet<String> fields = new HashSet<String>();
 		fields.add(FIELD_WITH_TIMESTAMP);
-		final long currentTiming = System.nanoTime();
+		long currentTiming = System.nanoTime();
 		long initialDelay = this.nextTimestamp - currentTiming/1000;
-		final long expectedValue = this.nextTimestamp;
+		long expectedValue = this.nextTimestamp;
 		ReadRunner readrunner = new ReadRunner(currentTiming, expectedValue, keyname, fields, db);
 		ScheduledFuture<?> taskToCancel = executor.scheduleWithFixedDelay(readrunner, initialDelay, delayBetweenConsistencyChecks, TimeUnit.MICROSECONDS);
 		readrunner.setTask(taskToCancel);
@@ -138,7 +138,7 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 					String temp = readValueAsByteIterator.toString().trim();
 					
 					long time= Long.parseLong(temp);
-					//System.err.println("          " + temp);
+					System.err.println("\t" + temp);
 					//System.err.println("queue: " + executor.getTaskCount());
 					if(time == expectedValue){
 
