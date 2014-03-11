@@ -109,6 +109,9 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 		long currentTiming = System.nanoTime();
 		long initialDelay = this.nextTimestamp - currentTiming / 1000;
 		long expectedValue = this.nextTimestamp;
+		
+		System.err.println("Planning read at " + (System.nanoTime() / 1000) + " for " + this.nextTimestamp);
+		
 		ReadRunner readrunner = new ReadRunner(currentTiming, expectedValue,
 				keyname, fields, db);
 		ScheduledFuture<?> taskToCancel = executor.scheduleWithFixedDelay(
