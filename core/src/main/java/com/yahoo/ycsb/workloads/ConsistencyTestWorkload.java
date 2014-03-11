@@ -16,7 +16,7 @@ import com.yahoo.ycsb.measurements.ConsistencyOneMeasurement;
 public class ConsistencyTestWorkload extends CoreWorkload {
 
 	private static final String START_POINT_PROPERTY = "starttime";
-	private static final String DEFAULT_START_POINT_PROPERTY = "5000000";
+	private static final String DEFAULT_START_POINT_PROPERTY = "5000";
 	private static final String CONSISTENCY_DELAY_PROPERTY = "consistencyDelayMillis";
 	public static final String NEW_REQUEST_PERIOD_PROPERTY = "newrequestperiodMillis";
 
@@ -44,7 +44,7 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 				"Illegal synchronousClock value")
 				+ this.convertToLong(startTimeAsString, "Property \""
 						+ START_POINT_PROPERTY
-						+ "\" should be an integer number");
+						+ "\" should be an integer number")*1000;
 		
 		System.err.println("FIRST NEXT TIMESTAMP: " + this.nextTimestamp);
 		System.err.println("CURRENT TIME: " + System.nanoTime()/100);
