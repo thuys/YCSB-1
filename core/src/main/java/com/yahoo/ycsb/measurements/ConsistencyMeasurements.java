@@ -111,7 +111,9 @@ public class ConsistencyMeasurements {
 
 	public void export(Properties props) {
 		System.err.println("STARTING TO EXPORT");
-		if(props.contains(INSERT_MATRIX_PROPERTY)){
+		if(props.getProperty(INSERT_MATRIX_PROPERTY) != null){
+			System.err.println("STARTING TO EXPORT-2");
+
 			try {
 				PrintWriter out = new PrintWriter(props.getProperty(INSERT_MATRIX_PROPERTY));
 				out.println(exportLastDelaysAsMatrix());
