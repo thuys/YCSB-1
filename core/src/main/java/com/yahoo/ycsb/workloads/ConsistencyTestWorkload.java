@@ -128,7 +128,7 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 		@Override
 		public void run() {
 			try {
-				System.err.println("Read run started: (at " + identifier + ") \n\t" + expectedValue);
+				System.err.println("Read run started: (at " + identifier + ") \n\t\t" + expectedValue);
 				// TODO: check of meting in measurement interval ligt
 				HashMap<String, ByteIterator> readResult = new HashMap<String, ByteIterator>();
 				db.read(table, keyname, fields, readResult);
@@ -138,7 +138,7 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 					String temp = readValueAsByteIterator.toString().trim();
 					
 					long time= Long.parseLong(temp);
-					System.err.println("\t" + temp);
+					System.err.println("\t2\t" + temp);
 					//System.err.println("queue: " + executor.getTaskCount());
 					if(time == expectedValue){
 
