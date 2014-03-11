@@ -69,7 +69,7 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 	}
 	
 	public String buildKeyName(long keynum) {
-		return "user" + keynum;
+		return "consistency" + keynum;
 	}
 	
 	HashMap<String, ByteIterator> buildUpdate() {
@@ -92,32 +92,40 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 		final String keyname = buildKeyName(keynum);
 		final HashSet<String> fields = new HashSet<String>();
 		fields.add(FIELD_WITH_TIMESTAMP);
-		
-		long initialDelay = this.nextTimestamp - System.nanoTime()/1000;
+		final long currentTiming = System.nanoTime();
+		long initialDelay = this.nextTimestamp - currentTiming/1000;
 		final long expectedValue = this.nextTimestamp;
 		executor.scheduleWithFixedDelay(new Runnable() {
 			
 			@Override
 			public void run() {
 				try {
+					System.err.println("Read run started: (at " + currentTiming + ") \n\t" + expectedValue);
 					// TODO: check of meting in measurement interval ligt
-					boolean consistencyReached = false;
 					HashMap<String, ByteIterator> readResult = new HashMap<String, ByteIterator>();
 					db.read(table, keyname, fields, readResult);
-					consistencyReached = isConsistencyReached(readResult,
-							expectedValue);
-					if (consistencyReached) {
-						long time = Long.parseLong(readResult.get(
-								FIELD_WITH_TIMESTAMP).toString());
-						long delay = System.nanoTime() / 1000 - time;
+					ByteIterator readValueAsByteIterator = readResult.get(FIELD_WITH_TIMESTAMP);
+					
+					if(readValueAsByteIterator != null){
+						String temp = readValueAsByteIterator.toString().trim();
 						
-						System.err.println("consistency reached!!!");
+						long time= Long.parseLong(temp);
+						//System.err.println("          " + temp);
+						//System.err.println("queue: " + executor.getTaskCount());
+						if(time == expectedValue){
 
-						// TODO: hacking in de client
-						oneMeasurement.addMeasurement(time, delay);
-						
-						// Remove
-						executor.remove(this);
+							long delay = System.nanoTime() / 1000 - time;
+							
+							System.err.println("consistency reached!!!");
+	
+							// TODO: hacking in de client
+							oneMeasurement.addMeasurement(time, delay);
+							
+							// Remove
+							executor.remove(this);
+						}
+					}else{
+						System.err.println("\t null ");
 					}
 				} catch (Throwable e) {
 					e.printStackTrace();
@@ -130,19 +138,18 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 	}
 	
 	
-	private boolean isConsistencyReached(HashMap<String, ByteIterator> readResult, long expectedValue){
-		ByteIterator readValueAsByteIterator = readResult.get(FIELD_WITH_TIMESTAMP);
-		if(readValueAsByteIterator == null){
-			System.err.println("expected: null " + expectedValue);
-			return false;
-		}
-		System.err.println("expected: " + expectedValue);
-		System.err.println("          " + readValueAsByteIterator.toString());
-		System.err.println("queue: " + executor.getTaskCount());
-		
-		long readValue= Long.parseLong(readValueAsByteIterator.toString());
-		return (expectedValue == readValue);
-	}
+//	private boolean isConsistencyReached(HashMap<String, ByteIterator> readResult, long expectedValue){
+//		ByteIterator readValueAsByteIterator = readResult.get(FIELD_WITH_TIMESTAMP);
+//		if(readValueAsByteIterator == null){
+//			System.err.println("expected: null " + expectedValue);
+//			return false;
+//		}
+//		String temp = readValueAsByteIterator.toString().trim();
+//
+//		
+//		long readValue= Long.parseLong(temp);
+//		return (expectedValue == readValue);
+//	}
 	
 	public void doTransactionReadModifyWrite(DB db)
 	{
