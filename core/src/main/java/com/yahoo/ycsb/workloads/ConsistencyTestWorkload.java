@@ -92,15 +92,15 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 		final String keyname = buildKeyName(keynum);
 		final HashSet<String> fields = new HashSet<String>();
 		fields.add(FIELD_WITH_TIMESTAMP);
-		
-		long initialDelay = this.nextTimestamp - System.nanoTime()/1000;
+		final long currentTiming = System.nanoTime();
+		long initialDelay = this.nextTimestamp - currentTiming/1000;
 		final long expectedValue = this.nextTimestamp;
 		executor.scheduleWithFixedDelay(new Runnable() {
 			
 			@Override
 			public void run() {
 				try {
-					System.err.println("Read run started: " + expectedValue);
+					System.err.println("Read run started: (at currentTiming) \n\t" + expectedValue);
 					// TODO: check of meting in measurement interval ligt
 					HashMap<String, ByteIterator> readResult = new HashMap<String, ByteIterator>();
 					db.read(table, keyname, fields, readResult);
