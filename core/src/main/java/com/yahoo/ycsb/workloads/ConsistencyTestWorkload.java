@@ -7,6 +7,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.cassandra.thrift.Cassandra.system_add_column_family_args;
+
 import com.yahoo.ycsb.ByteIterator;
 import com.yahoo.ycsb.DB;
 import com.yahoo.ycsb.StringByteIterator;
@@ -45,6 +47,10 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 				+ this.convertToLong(startTimeAsString, "Property \""
 						+ START_POINT_PROPERTY
 						+ "\" should be an integer number");
+		
+		System.err.println("FIRST NEXT TIMESTAMP: " + this.nextTimestamp);
+		System.err.println("CURRENT TIME: " + System.nanoTime()/100);
+		
 		this.keyCounter = 0;
 
 		if (!p.containsKey(CONSISTENCY_DELAY_PROPERTY)) {
