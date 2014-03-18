@@ -3,6 +3,7 @@ package com.yahoo.ycsb.workloads;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
+import java.util.Random;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -12,6 +13,9 @@ import com.yahoo.ycsb.DB;
 import com.yahoo.ycsb.StringByteIterator;
 import com.yahoo.ycsb.WorkloadException;
 import com.yahoo.ycsb.measurements.ConsistencyOneMeasurement;
+import com.yahoo.ycsb.workloads.runners.InsertRunner;
+import com.yahoo.ycsb.workloads.runners.ReadRunner;
+import com.yahoo.ycsb.workloads.runners.UpdateRunner;
 
 public class ConsistencyTestWorkload extends CoreWorkload {
 
@@ -19,7 +23,7 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 	private static final String DEFAULT_START_POINT_PROPERTY = "5000";
 	private static final String CONSISTENCY_DELAY_PROPERTY = "consistencyDelayMillis";
 	public static final String NEW_REQUEST_PERIOD_PROPERTY = "newrequestperiodMillis";
-
+	
 	ScheduledThreadPoolExecutor executor;
 
 	private long nextTimestamp;
@@ -28,11 +32,14 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 	private ConsistencyOneMeasurement oneMeasurement;
 	private long delayBetweenConsistencyChecks;
 	private long newRequestPeriod;
+	private Random randomForUpdateOperations;
 
 	public ConsistencyTestWorkload() {
 		this.nextTimestamp = -1;
 		this.keyCounter = 0;
 		executor = new ScheduledThreadPoolExecutor(1);
+		// TODO: set seed
+		this.randomForUpdateOperations = new Random();
 	}
 
 	public void init(Properties p) throws WorkloadException {
@@ -82,12 +89,17 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 		return this.keyCounter++;
 	}
 
+	private String buildKeyForUpdate(){
+		int keynum = this.randomForUpdateOperations.nextInt(this.keyCounter);
+		return "consistency" + keynum;
+	}
+	
 	public String buildKeyName(long keynum) {
 		return "consistency" + keynum;
 	}
 
 	HashMap<String, ByteIterator> buildUpdate() {
-		throw new UnsupportedOperationException("Update not supported");
+		return this.buildValues();
 	}
 
 	private long convertToLong(String stringToConvert, String errorMessage)
@@ -112,76 +124,13 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 		
 		System.err.println("Planning read at " + (System.nanoTime() / 1000) + " for " + this.nextTimestamp);
 		
-		ReadRunner readrunner = new ReadRunner(currentTiming, expectedValue,
-				keyname, fields, db);
+		ReadRunner readrunner = new ReadRunner(currentTiming, expectedValue, keyname,
+											fields, db, this, this.oneMeasurement);
 		ScheduledFuture<?> taskToCancel = executor.scheduleWithFixedDelay(
 				readrunner, initialDelay, delayBetweenConsistencyChecks,
 				TimeUnit.MICROSECONDS);
 		readrunner.setTask(taskToCancel);
 		this.updateTimestamp();
-	}
-
-	private class ReadRunner implements Runnable {
-		private final long identifier, expectedValue;
-		private final String keyname;
-		final HashSet<String> fields;
-		private final DB db;
-		private ScheduledFuture<?> taskToCancel;
-
-		public ReadRunner(long identifier, long expectedValue, String keyname,
-				HashSet<String> fields, DB db) {
-			super();
-			this.identifier = identifier;
-			this.expectedValue = expectedValue;
-			this.keyname = keyname;
-			this.fields = fields;
-			this.db = db;
-		}
-
-		public void setTask(ScheduledFuture<?> taskToCancel) {
-			this.taskToCancel = taskToCancel;
-		}
-
-		@Override
-		public void run() {
-			try {
-				System.err.println("READING_THREAD: reading key : "
-						+ keyname + " for value: " + expectedValue + " at " + (System.nanoTime()/1000));
-
-				// TODO: check of meting in measurement interval ligt
-				HashMap<String, ByteIterator> readResult = new HashMap<String, ByteIterator>();
-				db.read(table, keyname, fields, readResult);
-				ByteIterator readValueAsByteIterator = readResult
-						.get(FIELD_WITH_TIMESTAMP);
-
-				if (readValueAsByteIterator != null) {
-					String temp = readValueAsByteIterator.toString().trim();
-
-					long time = Long.parseLong(temp);
-					System.err.println("\t2\t" + temp);
-					// System.err.println("queue: " + executor.getTaskCount());
-					if (time == expectedValue) {
-
-						long delay = System.nanoTime() / 1000 - time;
-
-						System.err.println("consistency reached!!!");
-
-						// TODO: hacking in de client
-						oneMeasurement.addMeasurement(time, delay);
-
-						// Remove
-						taskToCancel.cancel(false);
-					}
-				} else {
-					System.err.println("\t null ");
-				}
-			} catch (Throwable e) {
-				e.printStackTrace();
-			}
-			// TODO Check for time out
-			System.err.println("READ RUN FINISHED");
-		}
-
 	}
 
 	// private boolean isConsistencyReached(HashMap<String, ByteIterator>
@@ -209,35 +158,27 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 	}
 
 	public void doTransactionUpdate(DB db) {
-		throw new UnsupportedOperationException("update not supported");
+		final String dbkey = buildKeyForUpdate();
+		final HashMap<String, ByteIterator> values = buildValues();
+		UpdateRunner updateRunner = new UpdateRunner(db, dbkey, values, this);		
+		this.scheduleRunnableOnNextTimestamp(updateRunner);
 	}
 
 	public void doTransactionInsert(final DB db) {
 		int keynum = nextKeynum();
 		final String dbkey = buildKeyName(keynum);
 		final HashMap<String, ByteIterator> values = buildValues();
-
+		InsertRunner insertRunner = new InsertRunner(db, dbkey, values, this);		
+		this.scheduleRunnableOnNextTimestamp(insertRunner);
+	}
+	
+	private void scheduleRunnableOnNextTimestamp(Runnable runnable){
 		long sleepTime = this.nextTimestamp - (System.nanoTime() / 1000);
 		System.err.println("Planning insert at " + (System.nanoTime() / 1000) + " for " + this.nextTimestamp);
-		executor.schedule(new Runnable() {
-
-			@Override
-			public void run() {
-				try {
-					// /////////
-					System.err.println("WRITER_THREAD: inserting values: "
-							+ values + " for key: " + dbkey + " at " + (System.nanoTime()/1000));
-					// /////////
-					db.insert(table, dbkey, values);
-				} catch (Throwable e) {
-					e.printStackTrace();
-				}
-			}
-		}, sleepTime, TimeUnit.MICROSECONDS);
-
+		this.executor.schedule(runnable, sleepTime, TimeUnit.MICROSECONDS);
 		this.updateTimestamp();
 	}
-
+	
 	public ConsistencyOneMeasurement getOneMeasurement() {
 		return oneMeasurement;
 	}
@@ -251,6 +192,14 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 		executor.shutdownNow();
 	}
 
+	public String getFieldWithTimestamp(){
+		return FIELD_WITH_TIMESTAMP;
+	}
+	
+	public String getTableName(){
+		return table;
+	}
+	
 	@Override
 	public void cleanup() throws WorkloadException {
 		super.cleanup();
