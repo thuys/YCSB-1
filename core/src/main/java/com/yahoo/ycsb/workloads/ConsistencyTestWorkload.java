@@ -160,6 +160,7 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 	public void doTransactionUpdate(DB db) {
 		final String dbkey = buildKeyForUpdate();
 		final HashMap<String, ByteIterator> values = buildValues();
+		System.err.println("Planning update at " + (System.nanoTime() / 1000) + " for " + this.nextTimestamp);
 		UpdateRunner updateRunner = new UpdateRunner(db, dbkey, values, this);		
 		this.scheduleRunnableOnNextTimestamp(updateRunner);
 	}
@@ -168,13 +169,13 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 		int keynum = nextKeynum();
 		final String dbkey = buildKeyName(keynum);
 		final HashMap<String, ByteIterator> values = buildValues();
+		System.err.println("Planning insert at " + (System.nanoTime() / 1000) + " for " + this.nextTimestamp);
 		InsertRunner insertRunner = new InsertRunner(db, dbkey, values, this);		
 		this.scheduleRunnableOnNextTimestamp(insertRunner);
 	}
 	
 	private void scheduleRunnableOnNextTimestamp(Runnable runnable){
 		long sleepTime = this.nextTimestamp - (System.nanoTime() / 1000);
-		System.err.println("Planning insert at " + (System.nanoTime() / 1000) + " for " + this.nextTimestamp);
 		this.executor.schedule(runnable, sleepTime, TimeUnit.MICROSECONDS);
 		this.updateTimestamp();
 	}
