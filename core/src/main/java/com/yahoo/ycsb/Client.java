@@ -743,6 +743,7 @@ public class Client {
 			
 			int amountOfReadThreads = getAmountOfReadThreads(props);
 			ConsistencyTestWorkload writerWorkload = (ConsistencyTestWorkload) createWorkload(props, writerWorkloadclass);
+			writerWorkload.setThreadDelayMultiplier(0);
 			List<Workload> readerWorkloads = getReaderWorkloads(props, readerWorkloadclass, amountOfReadThreads, measurements);
 			
 			Thread writerThread = createClientThread(dbname, props, dotransactions, 1, getTargetToConsistencyWorkload(props), 
