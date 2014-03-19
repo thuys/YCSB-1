@@ -740,10 +740,11 @@ public class Client {
 		Vector<Thread> threads = new Vector<Thread>();
 		int threadCounter = 0;
 		if(props.getProperty("consistencyTest") != null){
-			Class workloadclass = classLoader.loadClass("com.yahoo.ycsb.workloads.ConsistencyTestWorkload");
+			Class readerWorkloadclass = classLoader.loadClass("com.yahoo.ycsb.workloads.ReaderWorkload");
+			Class writerWorkloadclass = classLoader.loadClass("com.yahoo.ycsb.workloads.WriterWorkload");
 			int amountOfReadThreads = getAmountOfReadThreads(props);
-			Workload writerWorkload = getWriterWorkload(props, workloadclass);
-			List<Workload> readerWorkloads = getReaderWorkloads(props, workloadclass, amountOfReadThreads, measurements);
+			Workload writerWorkload = createWorkload(props, writerWorkloadclass);
+			List<Workload> readerWorkloads = getReaderWorkloads(props, readerWorkloadclass, amountOfReadThreads, measurements);
 			threads = createAmountOfThreads(dbname, props, dotransactions, amountOfReadThreads, getTargetToConsistencyWorkload(props), 
 															readerWorkloads, opcount, false, threadCounter);
 			threadCounter += threads.size();
@@ -752,7 +753,7 @@ public class Client {
 			
 			threads.add(writerThread);
 		//TODO: remove else after test
-		}else{
+		} else{
 			Class workloadclass = classLoader.loadClass(props.getProperty(WORKLOAD_PROPERTY));
 			Workload workload = createWorkload(props, workloadclass);
 			threads.addAll(createAmountOfThreads(dbname, props, dotransactions, threadcount, 
@@ -769,16 +770,6 @@ public class Client {
 			throw new RuntimeException("Parameter \"readThreads\" should be an integer value");
 		}
 	}
-	
-	private static Workload getWriterWorkload(Properties prop, Class workloadclass){
-		Properties newProp = (Properties) prop.clone();
-		newProp.setProperty(CoreWorkload.READ_PROPORTION_PROPERTY, "0");
-		newProp.setProperty(CoreWorkload.UPDATE_PROPORTION_PROPERTY, "0");
-		newProp.setProperty(CoreWorkload.INSERT_PROPORTION_PROPERTY, "1");
-		newProp.setProperty(CoreWorkload.SCAN_PROPORTION_PROPERTY, "0");
-		newProp.setProperty(CoreWorkload.READMODIFYWRITE_PROPORTION_PROPERTY, "0");
-		return createWorkload(newProp, workloadclass);
-	}
 
 	private static double getTargetToConsistencyWorkload(Properties newProp) {
 		System.err.println("REQUEST_PERIOD: " + newProp.getProperty(ConsistencyTestWorkload.NEW_REQUEST_PERIOD_PROPERTY));
@@ -789,14 +780,8 @@ public class Client {
 	private static List<Workload> getReaderWorkloads(Properties prop, Class workloadclass, int amount, ConsistencyMeasurements measurements){
 		List<Workload> result = new ArrayList<Workload>();
 		for(int i=0; i<amount; i++){
-			Properties newProp = (Properties) prop.clone();
-			newProp.setProperty(CoreWorkload.READ_PROPORTION_PROPERTY, "1");
-			newProp.setProperty(CoreWorkload.UPDATE_PROPORTION_PROPERTY, "0");
-			newProp.setProperty(CoreWorkload.INSERT_PROPORTION_PROPERTY, "0");
-			newProp.setProperty(CoreWorkload.SCAN_PROPORTION_PROPERTY, "0");
-			newProp.setProperty(CoreWorkload.READMODIFYWRITE_PROPORTION_PROPERTY, "0");
 			//TODO: resetten van target
-			ConsistencyTestWorkload workload = (ConsistencyTestWorkload) createWorkload(newProp, workloadclass); 
+			ConsistencyTestWorkload workload = (ConsistencyTestWorkload) createWorkload(prop, workloadclass); 
 			result.add(workload);
 			ConsistencyOneMeasurement measurement = measurements.getNewConsistencyOneMeasurement();
 			workload.setOneMeasurement(measurement);

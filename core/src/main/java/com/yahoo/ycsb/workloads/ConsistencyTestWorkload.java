@@ -1,10 +1,8 @@
 package com.yahoo.ycsb.workloads;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Properties;
 import java.util.Random;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -13,11 +11,8 @@ import com.yahoo.ycsb.DB;
 import com.yahoo.ycsb.StringByteIterator;
 import com.yahoo.ycsb.WorkloadException;
 import com.yahoo.ycsb.measurements.ConsistencyOneMeasurement;
-import com.yahoo.ycsb.workloads.runners.InsertRunner;
-import com.yahoo.ycsb.workloads.runners.ReadRunner;
-import com.yahoo.ycsb.workloads.runners.UpdateRunner;
 
-public class ConsistencyTestWorkload extends CoreWorkload {
+public abstract class ConsistencyTestWorkload extends CoreWorkload {
 
 	private static final String START_POINT_PROPERTY = "starttime";
 	private static final String DEFAULT_START_POINT_PROPERTY = "10000";
@@ -26,11 +21,13 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 	
 	ScheduledThreadPoolExecutor executor;
 
-	private long nextTimestamp;
-	private static final String FIELD_WITH_TIMESTAMP = "field0";
+	protected long nextTimestamp;
+	protected static final String FIELD_WITH_TIMESTAMP = "field0";
+	protected ConsistencyOneMeasurement oneMeasurement;
+	protected long delayBetweenConsistencyChecks;
+	protected boolean firstOperation;
+	
 	private int keyCounter;
-	private ConsistencyOneMeasurement oneMeasurement;
-	private long delayBetweenConsistencyChecks;
 	private long newRequestPeriod;
 	private Random randomForUpdateOperations;
 
@@ -39,7 +36,8 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 		this.keyCounter = 0;
 		executor = new ScheduledThreadPoolExecutor(1);
 		// TODO: set seed
-		this.randomForUpdateOperations = new Random();
+		this.randomForUpdateOperations = new Random(1533447432334L);
+		this.firstOperation = true;
 	}
 
 	public void init(Properties p) throws WorkloadException {
@@ -72,7 +70,7 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 						+ "\" should be an long number");
 	}
 
-	private void updateTimestamp() {
+	protected void updateTimestamp() {
 		this.nextTimestamp = this.nextTimestamp + this.newRequestPeriod;
 	}
 
@@ -89,7 +87,7 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 		return this.keyCounter++;
 	}
 
-	private String buildKeyForUpdate(){
+	protected String buildKeyForUpdate(){
 		int keynum = this.randomForUpdateOperations.nextInt(this.keyCounter);
 		return "consistency" + keynum;
 	}
@@ -114,23 +112,7 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 	}
 
 	public void doTransactionRead(DB db) {
-		int keynum = nextKeynum();
-		String keyname = buildKeyName(keynum);
-		HashSet<String> fields = new HashSet<String>();
-		fields.add(FIELD_WITH_TIMESTAMP);
-		long currentTiming = System.nanoTime();
-		long initialDelay = this.nextTimestamp - currentTiming / 1000;
-		long expectedValue = this.nextTimestamp;
-		
-		System.err.println("Planning read at " + (System.nanoTime() / 1000) + " for " + this.nextTimestamp);
-		
-		ReadRunner readrunner = new ReadRunner(currentTiming, expectedValue, keyname,
-											fields, db, this, this.oneMeasurement);
-		ScheduledFuture<?> taskToCancel = executor.scheduleWithFixedDelay(
-				readrunner, initialDelay, delayBetweenConsistencyChecks,
-				TimeUnit.MICROSECONDS);
-		readrunner.setTask(taskToCancel);
-		this.updateTimestamp();
+		throw new UnsupportedOperationException("read not supported");
 	}
 
 	// private boolean isConsistencyReached(HashMap<String, ByteIterator>
@@ -158,23 +140,14 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 	}
 
 	public void doTransactionUpdate(DB db) {
-		final String dbkey = buildKeyForUpdate();
-		final HashMap<String, ByteIterator> values = buildValues();
-		System.err.println("Planning update at " + (System.nanoTime() / 1000) + " for " + this.nextTimestamp);
-		UpdateRunner updateRunner = new UpdateRunner(db, dbkey, values, this);		
-		this.scheduleRunnableOnNextTimestamp(updateRunner);
+		throw new UnsupportedOperationException("update not supported");
 	}
 
 	public void doTransactionInsert(final DB db) {
-		int keynum = nextKeynum();
-		final String dbkey = buildKeyName(keynum);
-		final HashMap<String, ByteIterator> values = buildValues();
-		System.err.println("Planning insert at " + (System.nanoTime() / 1000) + " for " + this.nextTimestamp);
-		InsertRunner insertRunner = new InsertRunner(db, dbkey, values, this);		
-		this.scheduleRunnableOnNextTimestamp(insertRunner);
+		throw new UnsupportedOperationException("insert not supported");
 	}
 	
-	private void scheduleRunnableOnNextTimestamp(Runnable runnable){
+	protected void scheduleRunnableOnNextTimestamp(Runnable runnable){
 		long sleepTime = this.nextTimestamp - (System.nanoTime() / 1000);
 		this.executor.schedule(runnable, sleepTime, TimeUnit.MICROSECONDS);
 		this.updateTimestamp();
