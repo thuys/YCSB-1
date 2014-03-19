@@ -23,6 +23,7 @@ public class ReaderWorkload extends ConsistencyTestWorkload{
 		if(this.firstOperation)
 			this.firstOperation = false;
 		int keynum = nextKeynum();
+		System.err.println("keynum: " + keynum);
 		String dbkey = buildKeyName(keynum);
 		this.checkConsistency(db, dbkey);
 	}

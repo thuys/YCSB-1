@@ -26,7 +26,8 @@ public class WriterWorkload extends ConsistencyTestWorkload {
 	public void doTransactionInsert(final DB db) {
 		if(this.firstOperation)
 			this.firstOperation = false;
-		int keynum = nextKeynum();
+		int keynum = this.nextKeynum();
+		System.err.println("keynum: " + keynum);
 		final String dbkey = buildKeyName(keynum);
 		final HashMap<String, ByteIterator> values = buildValues();
 		System.err.println("Planning insert at " + (System.nanoTime() / 1000) + " for " + this.nextTimestamp);
