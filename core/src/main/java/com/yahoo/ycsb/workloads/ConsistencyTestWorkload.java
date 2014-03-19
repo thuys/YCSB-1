@@ -58,7 +58,7 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 		String delayBetweenThreadsAsString = p.getProperty(DELAY_BETWEEN_THREADS_IN_MILLIS_PROPERTY, 
 													DEFAULT_DELAY_BETWEEN_THREADS_IN_MILLIS_PROPERTY);
 		this.delayBetweenThreads = this.convertToLong(delayBetweenThreadsAsString, 
-				"\"" + DELAY_BETWEEN_THREADS_IN_MILLIS_PROPERTY + "\" property should be an long type");
+				"\"" + DELAY_BETWEEN_THREADS_IN_MILLIS_PROPERTY + "\" property should be an long type")*1000;
 		
 		System.err.println("FIRST NEXT TIMESTAMP: " + this.nextTimestamp);
 		System.err.println("CURRENT TIME: " + System.nanoTime()/1000);
