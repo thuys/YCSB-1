@@ -32,7 +32,7 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 	private int keyCounter;
 	private long newRequestPeriod;
 	private Random randomForUpdateOperations;
-	private int threadDelayMultiplier;
+	private long threadDelayMultiplier;
 	private long delayBetweenThreads;
 	
 	public ConsistencyTestWorkload() {
@@ -198,7 +198,7 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 	}
 	
 	protected long getDelayForThread(){
-		return this.delayBetweenThreads * ((long)this.threadDelayMultiplier);
+		return (this.delayBetweenThreads * this.threadDelayMultiplier);
 	}
 	
 }

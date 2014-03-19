@@ -30,8 +30,10 @@ public class WriterWorkload extends ConsistencyTestWorkload {
 		int keynum = this.nextKeynum();
 		final String dbkey = buildKeyName(keynum);
 		final HashMap<String, ByteIterator> values = buildValues();
+		
 		System.err.println("Planning insert at " + (System.nanoTime() / 1000) + " for " + 
 						(this.nextTimestamp - (System.nanoTime() / 1000) + this.getDelayForThread()));
+		
 		InsertRunner insertRunner = new InsertRunner(db, dbkey, values, this);		
 		this.scheduleRunnableOnNextTimestamp(insertRunner);
 	}
