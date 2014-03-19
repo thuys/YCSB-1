@@ -211,13 +211,4 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 		}
 	}
 	
-	// First transaction has to be an insert transaction
-	public boolean doTransaction(DB db, Object threadstate){
-		if(this.keyCounter == 0)
-			doTransactionInsert(db);
-		else
-			super.doTransaction(db, threadstate);
-		return true;
-	}
-	
 }
