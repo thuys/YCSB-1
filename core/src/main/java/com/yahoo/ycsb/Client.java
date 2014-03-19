@@ -35,7 +35,6 @@ import com.yahoo.ycsb.measurements.Measurements;
 import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
 import com.yahoo.ycsb.measurements.exporter.TextMeasurementsExporter;
 import com.yahoo.ycsb.workloads.ConsistencyTestWorkload;
-import com.yahoo.ycsb.workloads.CoreWorkload;
 
 //import org.apache.log4j.BasicConfigurator;
 
@@ -738,26 +737,24 @@ public class Client {
 			double targetperthreadperms, int opcount, ConsistencyMeasurements measurements) throws ClassNotFoundException {
 		ClassLoader classLoader = Client.class.getClassLoader();
 		Vector<Thread> threads = new Vector<Thread>();
-		int threadCounter = 0;
 		if(props.getProperty("consistencyTest") != null){
-			Class readerWorkloadclass = classLoader.loadClass("com.yahoo.ycsb.workloads.ReaderWorkload");
-			Class writerWorkloadclass = classLoader.loadClass("com.yahoo.ycsb.workloads.WriterWorkload");
-			int amountOfReadThreads = getAmountOfReadThreads(props);
-			Workload writerWorkload = createWorkload(props, writerWorkloadclass);
-			List<Workload> readerWorkloads = getReaderWorkloads(props, readerWorkloadclass, amountOfReadThreads, measurements);
-			threads = createAmountOfThreads(dbname, props, dotransactions, amountOfReadThreads, getTargetToConsistencyWorkload(props), 
-															readerWorkloads, opcount, false, threadCounter);
-			threadCounter += threads.size();
-			Thread writerThread = createClientThread(dbname, props, dotransactions, 1, getTargetToConsistencyWorkload(props), 
-												writerWorkload, opcount, threadCounter++, false);
+			Class<?> readerWorkloadclass = classLoader.loadClass("com.yahoo.ycsb.workloads.ReaderWorkload");
+			Class<?> writerWorkloadclass = classLoader.loadClass("com.yahoo.ycsb.workloads.WriterWorkload");
 			
+			int amountOfReadThreads = getAmountOfReadThreads(props);
+			ConsistencyTestWorkload writerWorkload = (ConsistencyTestWorkload) createWorkload(props, writerWorkloadclass);
+			List<Workload> readerWorkloads = getReaderWorkloads(props, readerWorkloadclass, amountOfReadThreads, measurements);
+			
+			Thread writerThread = createClientThread(dbname, props, dotransactions, 1, getTargetToConsistencyWorkload(props), 
+					writerWorkload, opcount, 0, false);
+			threads = createAmountOfThreads(dbname, props, dotransactions, amountOfReadThreads, getTargetToConsistencyWorkload(props), 
+															readerWorkloads, opcount, false, 1);
 			threads.add(writerThread);
-		//TODO: remove else after test
 		} else{
-			Class workloadclass = classLoader.loadClass(props.getProperty(WORKLOAD_PROPERTY));
+			Class<?> workloadclass = classLoader.loadClass(props.getProperty(WORKLOAD_PROPERTY));
 			Workload workload = createWorkload(props, workloadclass);
 			threads.addAll(createAmountOfThreads(dbname, props, dotransactions, threadcount, 
-											targetperthreadperms, workload, opcount, true, threadCounter));
+											targetperthreadperms, workload, opcount, true, 0));
 		}
 		return threads;
 	}
@@ -777,7 +774,7 @@ public class Client {
 		return (1/dummy)*1.1;
 	}
 	
-	private static List<Workload> getReaderWorkloads(Properties prop, Class workloadclass, int amount, ConsistencyMeasurements measurements){
+	private static List<Workload> getReaderWorkloads(Properties prop, Class<?> workloadclass, int amount, ConsistencyMeasurements measurements){
 		List<Workload> result = new ArrayList<Workload>();
 		for(int i=0; i<amount; i++){
 			//TODO: resetten van target
@@ -785,11 +782,12 @@ public class Client {
 			result.add(workload);
 			ConsistencyOneMeasurement measurement = measurements.getNewConsistencyOneMeasurement();
 			workload.setOneMeasurement(measurement);
+			workload.setThreadDelayMultiplier(i);
 		}
 		return result;
 	}
 	
-	private static Workload createWorkload(Properties props, Class workloadclass) {
+	private static Workload createWorkload(Properties props, Class<?> workloadclass) {
 		Workload workload = null;
 		try {
 			workload = (Workload) workloadclass.newInstance();

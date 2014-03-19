@@ -31,7 +31,7 @@ public class ReaderWorkload extends ConsistencyTestWorkload{
 		HashSet<String> fields = new HashSet<String>();
 		fields.add(FIELD_WITH_TIMESTAMP);
 		long currentTiming = System.nanoTime();
-		long initialDelay = this.nextTimestamp - currentTiming / 1000;
+		long initialDelay = this.nextTimestamp - (currentTiming / 1000) + this.getDelayForThread();
 		long expectedValue = this.nextTimestamp;
 		
 		System.err.println("Planning read at " + (System.nanoTime() / 1000) + " for " + this.nextTimestamp);

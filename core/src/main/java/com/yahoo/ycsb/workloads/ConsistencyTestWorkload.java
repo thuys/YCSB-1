@@ -18,6 +18,8 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 	private static final String DEFAULT_START_POINT_PROPERTY = "10000";
 	private static final String CONSISTENCY_DELAY_PROPERTY = "consistencyDelayMillis";
 	public static final String NEW_REQUEST_PERIOD_PROPERTY = "newrequestperiodMillis";
+	private static final String DELAY_BETWEEN_THREADS_IN_MILLIS_PROPERTY = "threadDelayInMillis";
+	private static final String DEFAULT_DELAY_BETWEEN_THREADS_IN_MILLIS_PROPERTY = "0";
 	
 	ScheduledThreadPoolExecutor executor;
 
@@ -30,7 +32,9 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 	private int keyCounter;
 	private long newRequestPeriod;
 	private Random randomForUpdateOperations;
-
+	private int threadDelayMultiplier;
+	private long delayBetweenThreads;
+	
 	public ConsistencyTestWorkload() {
 		this.nextTimestamp = -1;
 		this.keyCounter = 0;
@@ -50,6 +54,11 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 				+ this.convertToLong(startTimeAsString, "Property \""
 						+ START_POINT_PROPERTY
 						+ "\" should be an integer number")*1000;
+		
+		String delayBetweenThreadsAsString = p.getProperty(DELAY_BETWEEN_THREADS_IN_MILLIS_PROPERTY, 
+													DEFAULT_DELAY_BETWEEN_THREADS_IN_MILLIS_PROPERTY);
+		this.delayBetweenThreads = this.convertToLong(delayBetweenThreadsAsString, 
+				"\"" + DELAY_BETWEEN_THREADS_IN_MILLIS_PROPERTY + "\" property should be an long type");
 		
 		System.err.println("FIRST NEXT TIMESTAMP: " + this.nextTimestamp);
 		System.err.println("CURRENT TIME: " + System.nanoTime()/1000);
@@ -148,7 +157,7 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 	}
 	
 	protected void scheduleRunnableOnNextTimestamp(Runnable runnable){
-		long sleepTime = this.nextTimestamp - (System.nanoTime() / 1000);
+		long sleepTime = this.nextTimestamp - (System.nanoTime() / 1000) + this.getDelayForThread();
 		this.executor.schedule(runnable, sleepTime, TimeUnit.MICROSECONDS);
 		this.updateTimestamp();
 	}
@@ -182,6 +191,14 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 		} catch (InterruptedException e) {
 			System.err.println("Consistency workload not stopped");
 		}
+	}
+	
+	public void setThreadDelayMultiplier(int multiplier){
+		this.threadDelayMultiplier = multiplier;
+	}
+	
+	protected long getDelayForThread(){
+		return this.delayBetweenThreads * this.threadDelayMultiplier;
 	}
 	
 }
