@@ -20,7 +20,7 @@ import com.yahoo.ycsb.workloads.runners.UpdateRunner;
 public class ConsistencyTestWorkload extends CoreWorkload {
 
 	private static final String START_POINT_PROPERTY = "starttime";
-	private static final String DEFAULT_START_POINT_PROPERTY = "5000";
+	private static final String DEFAULT_START_POINT_PROPERTY = "10000";
 	private static final String CONSISTENCY_DELAY_PROPERTY = "consistencyDelayMillis";
 	public static final String NEW_REQUEST_PERIOD_PROPERTY = "newrequestperiodMillis";
 	
@@ -54,7 +54,7 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 						+ "\" should be an integer number")*1000;
 		
 		System.err.println("FIRST NEXT TIMESTAMP: " + this.nextTimestamp);
-		System.err.println("CURRENT TIME: " + System.nanoTime()/100);
+		System.err.println("CURRENT TIME: " + System.nanoTime()/1000);
 		
 		this.keyCounter = 0;
 
