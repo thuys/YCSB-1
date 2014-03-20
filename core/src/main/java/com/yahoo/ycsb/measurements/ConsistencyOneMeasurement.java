@@ -2,50 +2,58 @@ package com.yahoo.ycsb.measurements;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Map;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
 public class ConsistencyOneMeasurement {
-	private Map<Long, Stack<Long>> measurementMap;
-	
+	private HashMap<OperationType, TreeMap<Long, Stack<Long>>> measurementInsertMap;	
 	private int threadNumber;
 	
 	ConsistencyOneMeasurement(int threadNumber){
 		this.threadNumber = threadNumber;
-		measurementMap = new TreeMap<Long, Stack<Long>>();
+		measurementInsertMap = new HashMap<OperationType, TreeMap<Long, Stack<Long>>>();
+		
 	}
 	
-	public void addMeasurement(long time, long delay){
-		if(!measurementMap.containsKey(time)){
-			measurementMap.put(time, new Stack<Long>());
+	public void addMeasurement(long time, OperationType type, long delay){
+		
+		if(!measurementInsertMap.containsKey(type)){
+			measurementInsertMap.put(type, new TreeMap<Long, Stack<Long>>());
 		}
-		measurementMap.get(time).add(delay);
+		if(!measurementInsertMap.get(type).containsKey(time)){
+			measurementInsertMap.get(type).put(time, new Stack<Long>());
+		}
+		measurementInsertMap.get(time).get(type).add(delay);
 	}
 	
 	public int getThreadNumber(){
 		return threadNumber;
 	}
 	
-	public Set<Long> getTimes(){
-		return new TreeSet<Long>(measurementMap.keySet());
+	public Set<Long> getTimes(OperationType type){
+		return new TreeSet<Long>(measurementInsertMap.get(type).keySet());
 	}
 	
-	public boolean hasDelay(long time){
-		return measurementMap.containsKey(time);
+	public boolean hasDelay(OperationType type, long time){
+		return measurementInsertMap.containsKey(type) && measurementInsertMap.get(type).containsKey(time);
 	}
 	
-	public long getLastDelay(long time){
-		return measurementMap.get(time).lastElement();
+	public long getLastDelay(OperationType type, long time){
+		return measurementInsertMap.get(type).get(time).lastElement();
 	}
 	
-	public Collection<Long> getAllDelays(long time){
-		return new ArrayList<Long>(measurementMap.get(time));
+	public Collection<Long> getAllDelays(OperationType type, long time){
+		return new ArrayList<Long>(measurementInsertMap.get(type).get(time));
 	}
 	
-	public int getNumberOfDelays(long time){
-		return measurementMap.get(time).size();
+	public int getNumberOfDelays(OperationType type, long time){
+		if(!measurementInsertMap.containsKey(type))
+			return 0;
+		if(!measurementInsertMap.get(type).containsKey(time))
+			return 0;
+		return measurementInsertMap.get(type).get(time).size();
 	}
 }

@@ -23,25 +23,25 @@ public class ConsistencyMeasurements {
 		allMeasurements.add(measurement);
 	}
 
-	public TreeSet<Long> getAllTimings(){
+	public TreeSet<Long> getAllTimings(OperationType type){
 		TreeSet<Long> mergedKeys = new TreeSet<Long>();
 
 		for (ConsistencyOneMeasurement measurement : allMeasurements) {
-			mergedKeys.addAll(measurement.getTimes());
+			mergedKeys.addAll(measurement.getTimes(type));
 		}
 		return mergedKeys;
 	}
 	
-	public TreeMap<Long, TreeMap<Integer, Long>> exportMeasurements() {
-		TreeSet<Long> mergedKeys = getAllTimings();
+	public TreeMap<Long, TreeMap<Integer, Long>> exportMeasurements(OperationType type) {
+		TreeSet<Long> mergedKeys = getAllTimings(type);
 
 		TreeMap<Long, TreeMap<Integer, Long>> result = new TreeMap<Long, TreeMap<Integer, Long>>();
 		for (Long time : mergedKeys) {
 			TreeMap<Integer, Long> timeMap = new TreeMap<Integer, Long>();
 			for (ConsistencyOneMeasurement measurement : allMeasurements) {
-				if (measurement.hasDelay(time))
+				if (measurement.hasDelay(type, time))
 					timeMap.put(measurement.getThreadNumber(),
-							measurement.getLastDelay(time));
+							measurement.getLastDelay(type, time));
 
 				result.put(time, timeMap);
 			}
@@ -50,27 +50,27 @@ public class ConsistencyMeasurements {
 		return result;
 	}
 	
-	public String exportLastDelaysAsMatrix(){
-		return exportString(new ExportDelay() {
+	public String exportLastDelaysAsMatrix(final OperationType type){
+		return exportString(type, new ExportDelay() {
 			
 			@Override
 			public String export(Long time, ConsistencyOneMeasurement measurement) {
-				return Long.toString(measurement.getLastDelay(time));
+				return Long.toString(measurement.getLastDelay(type, time));
 			}
 		});
 	}
 	
-	public String exportNbOfDifferentDelaysAsMatrix(){
-		return exportString(new ExportDelay() {
+	public String exportNbOfDifferentDelaysAsMatrix(final OperationType type){
+		return exportString(type, new ExportDelay() {
 			
 			@Override
 			public String export(Long time, ConsistencyOneMeasurement measurement) {
-				return Integer.toString(measurement.getNumberOfDelays(time));
+				return Integer.toString(measurement.getNumberOfDelays(type, time));
 			}
 		});
 	}
 	
-	private String exportString(ExportDelay export){
+	private String exportString(OperationType type, ExportDelay export){
 		String output = "";
 		
 		// First line with header
@@ -83,10 +83,10 @@ public class ConsistencyMeasurements {
 		}
 		output += "\n";
 		
-		for(Long time :getAllTimings()){
+		for(Long time :getAllTimings(type)){
 			output += time + SEPERATOR;
 			for(ConsistencyOneMeasurement measurement : allMeasurements){
-				if(measurement.hasDelay(time)){
+				if(measurement.hasDelay(type, time)){
 					output += export.export(time, measurement);
 				}
 				output += SEPERATOR;
@@ -116,13 +116,14 @@ public class ConsistencyMeasurements {
 
 			try {
 				PrintWriter out = new PrintWriter(props.getProperty(INSERT_MATRIX_PROPERTY));
-				out.println(exportLastDelaysAsMatrix());
+				out.println(exportLastDelaysAsMatrix(OperationType.INSERT));
 				out.close();
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			}
 			System.err.println("ENDING EXPORT");
 		}
+
 		
 	}
 }

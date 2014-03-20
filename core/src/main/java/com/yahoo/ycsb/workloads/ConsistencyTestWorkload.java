@@ -12,6 +12,7 @@ import com.yahoo.ycsb.DB;
 import com.yahoo.ycsb.StringByteIterator;
 import com.yahoo.ycsb.WorkloadException;
 import com.yahoo.ycsb.measurements.ConsistencyOneMeasurement;
+import com.yahoo.ycsb.measurements.OperationType;
 
 public class ConsistencyTestWorkload extends CoreWorkload {
 
@@ -160,7 +161,7 @@ public class ConsistencyTestWorkload extends CoreWorkload {
 						System.err.println("consistency reached!!!");
 
 						// TODO: hacking in de client
-						oneMeasurement.addMeasurement(time, delay);
+						oneMeasurement.addMeasurement(time, OperationType.INSERT, delay);
 
 						// Remove
 						taskToCancel.cancel(false);
