@@ -740,19 +740,10 @@ public class Client {
 		ClassLoader classLoader = Client.class.getClassLoader();
 		Vector<Thread> threads = new Vector<Thread>();
 		if(props.getProperty("consistencyTest") != null){
-			
-			Class<?> readerWorkloadclass = ReaderWorkload.class;
-			Class<?> writerWorkloadclass = WriterWorkload.class;
-			
-			int amountOfReadThreads = getAmountOfReadThreads(props);
-			ConsistencyTestWorkload writerWorkload = (ConsistencyTestWorkload) createWorkload(props, writerWorkloadclass);
-			writerWorkload.setThreadDelayMultiplier(0);
-			List<Workload> readerWorkloads = getReaderWorkloads(props, readerWorkloadclass, amountOfReadThreads, measurements);
-			
-			Thread writerThread = createClientThread(dbname, props, dotransactions, 1, getTargetToConsistencyWorkload(props), 
-					writerWorkload, opcount, 0, false);
-			threads = createAmountOfThreads(dbname, props, dotransactions, amountOfReadThreads, getTargetToConsistencyWorkload(props), 
-															readerWorkloads, opcount, false, 1);
+			Thread writerThread = createWriterThreads(dbname, props,
+					dotransactions, opcount, measurements);
+			threads = createReaderThread(dbname, props, dotransactions,
+					opcount, measurements);
 			threads.add(writerThread);
 		} else{
 			Class<?> workloadclass = classLoader.loadClass(props.getProperty(WORKLOAD_PROPERTY));
@@ -761,6 +752,27 @@ public class Client {
 											targetperthreadperms, workload, opcount, true, 0));
 		}
 		return threads;
+	}
+
+	private static Vector<Thread> createReaderThread(String dbname,
+			Properties props, boolean dotransactions, int opcount,
+			ConsistencyMeasurements measurements) {
+		Class<?> readerWorkloadclass = ReaderWorkload.class;
+		int amountOfReadThreads = getAmountOfReadThreads(props);
+		List<Workload> readerWorkloads = getReaderWorkloads(props, readerWorkloadclass, amountOfReadThreads, measurements);
+		return createAmountOfThreads(dbname, props, dotransactions, amountOfReadThreads, getTargetToConsistencyWorkload(props), 
+														readerWorkloads, opcount, false, 1);
+	}
+
+	private static Thread createWriterThreads(String dbname, Properties props,
+			boolean dotransactions, int opcount,
+			ConsistencyMeasurements measurements) {
+		Class<?> writerWorkloadclass = WriterWorkload.class;
+		ConsistencyTestWorkload writerWorkload = (ConsistencyTestWorkload) createWorkload(props, writerWorkloadclass);
+		writerWorkload.setOneMeasurement(measurements.getNewWriteConsistencyOneMeasurement());
+		writerWorkload.setThreadDelayMultiplier(0);
+		return createClientThread(dbname, props, dotransactions, 1, getTargetToConsistencyWorkload(props), 
+				writerWorkload, opcount, 0, false);
 	}
 
 	private static int getAmountOfReadThreads(Properties props){
