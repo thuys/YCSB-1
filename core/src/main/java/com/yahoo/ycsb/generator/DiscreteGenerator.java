@@ -17,6 +17,7 @@
 
 package com.yahoo.ycsb.generator;
 
+import java.util.Properties;
 import java.util.Random;
 import java.util.Vector;
 
@@ -41,14 +42,27 @@ public class DiscreteGenerator extends Generator
 
 	Vector<Pair> _values;
 	String _lastvalue;
-
+	private static final String USE_FIXED_OPERATION_DISTRIBUTION = "useFixedOperationDistributionSeed";
+	private static final String OPERATION_DISTRIBUTION_PROPERTY = "operationDistributionSeed";
+	
 	private Random randomGenerator;
 	
-	public DiscreteGenerator()
+	public DiscreteGenerator(Properties props)
 	{
 		_values=new Vector<Pair>();
 		_lastvalue=null;
-		this.randomGenerator = new Random(4578235344L);
+		if(props.getProperty(USE_FIXED_OPERATION_DISTRIBUTION) != null){
+			String seedAsString = props.getProperty(OPERATION_DISTRIBUTION_PROPERTY);
+			if(seedAsString != null){
+				long seed = Long.parseLong(seedAsString);
+				this.randomGenerator = new Random(seed);
+			}
+			else{
+				throw new IllegalArgumentException("Property \"" + OPERATION_DISTRIBUTION_PROPERTY + "\" is missing");
+			}
+		} else{
+			this.randomGenerator = new Random();
+		}
 	}
 
 	/**
