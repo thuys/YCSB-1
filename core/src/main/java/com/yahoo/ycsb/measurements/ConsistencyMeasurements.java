@@ -166,7 +166,7 @@ public class ConsistencyMeasurements {
 				if (measurement.hasDelay(type, time)) {
 					for (Pair<Long, Long> keys : measurement.getAllValues(type,
 							time)) {
-						output += time + SEPERATOR + "W-"
+						output += time + SEPERATOR + "R-"
 								+ measurement.getThreadNumber() + SEPERATOR
 								+ keys.getX() + SEPERATOR + keys.getY() + "\n";
 
