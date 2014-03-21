@@ -45,7 +45,7 @@ public class ConsistencyOneMeasurement {
 		return measurementInsertMap.containsKey(type) && measurementInsertMap.get(type).containsKey(time);
 	}
 	
-	public long getLastDelay(OperationType type, long time){
+	public Long getLastDelay(OperationType type, long time){
 		return measurementInsertMap.get(type).get(time).lastElement().getY();
 	}
 	
