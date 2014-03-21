@@ -784,7 +784,7 @@ public class Client {
 			//TODO: resetten van target
 			ConsistencyTestWorkload workload = (ConsistencyTestWorkload) createWorkload(prop, workloadclass); 
 			result.add(workload);
-			ConsistencyOneMeasurement measurement = measurements.getNewConsistencyOneMeasurement();
+			ConsistencyOneMeasurement measurement = measurements.getNewReadConsistencyOneMeasurement();
 			workload.setOneMeasurement(measurement);
 			workload.setThreadDelayMultiplier(i);
 		}

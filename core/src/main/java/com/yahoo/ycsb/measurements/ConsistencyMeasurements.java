@@ -9,7 +9,9 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 public class ConsistencyMeasurements {
-	private Set<ConsistencyOneMeasurement> allMeasurements;
+	private Set<ConsistencyOneMeasurement> allReadMeasurements;
+	private Set<ConsistencyOneMeasurement> allWriteMeasurements;
+
 	
 	private static final String INSERT_MATRIX_DELAY_PROPERTY = "insertMatrixDelayExportFile";
 	private static final String UPDATE_MATRIX_DELAY_PROPERTY = "updateMatrixDelayExportFile";
@@ -20,17 +22,18 @@ public class ConsistencyMeasurements {
 	private final static String SEPERATOR = ",";
 
 	public ConsistencyMeasurements() {
-		this.allMeasurements = new HashSet<ConsistencyOneMeasurement>();
+		this.allReadMeasurements = new HashSet<ConsistencyOneMeasurement>();
+		this.allWriteMeasurements = new HashSet<ConsistencyOneMeasurement>();
 	}
 
 	public void addMeasurement(ConsistencyOneMeasurement measurement) {
-		allMeasurements.add(measurement);
+		allReadMeasurements.add(measurement);
 	}
 
 	public TreeSet<Long> getAllTimings(OperationType type){
 		TreeSet<Long> mergedKeys = new TreeSet<Long>();
 
-		for (ConsistencyOneMeasurement measurement : allMeasurements) {
+		for (ConsistencyOneMeasurement measurement : allReadMeasurements) {
 			mergedKeys.addAll(measurement.getTimes(type));
 		}
 		return mergedKeys;
@@ -42,7 +45,7 @@ public class ConsistencyMeasurements {
 		TreeMap<Long, TreeMap<Integer, Long>> result = new TreeMap<Long, TreeMap<Integer, Long>>();
 		for (Long time : mergedKeys) {
 			TreeMap<Integer, Long> timeMap = new TreeMap<Integer, Long>();
-			for (ConsistencyOneMeasurement measurement : allMeasurements) {
+			for (ConsistencyOneMeasurement measurement : allReadMeasurements) {
 				if (measurement.hasDelay(type, time))
 					timeMap.put(measurement.getThreadNumber(),
 							measurement.getLastDelay(type, time));
@@ -81,7 +84,7 @@ public class ConsistencyMeasurements {
 		Set<Integer> threadIds = new TreeSet<Integer>();
 		output += SEPERATOR;
 		
-		for(ConsistencyOneMeasurement measurement : allMeasurements){
+		for(ConsistencyOneMeasurement measurement : allReadMeasurements){
 			threadIds.add(measurement.getThreadNumber());
 			output += measurement.getThreadNumber() + SEPERATOR;
 		}
@@ -89,7 +92,7 @@ public class ConsistencyMeasurements {
 		
 		for(Long time :getAllTimings(type)){
 			output += time + SEPERATOR;
-			for(ConsistencyOneMeasurement measurement : allMeasurements){
+			for(ConsistencyOneMeasurement measurement : allReadMeasurements){
 				if(measurement.hasDelay(type, time)){
 					output += export.export(time, measurement);
 				}
@@ -102,10 +105,17 @@ public class ConsistencyMeasurements {
 		return output;
 	}
 	
-	public ConsistencyOneMeasurement getNewConsistencyOneMeasurement(){
-		ConsistencyOneMeasurement result = new ConsistencyOneMeasurement(allMeasurements.size());
+	public ConsistencyOneMeasurement getNewReadConsistencyOneMeasurement(){
+		ConsistencyOneMeasurement result = new ConsistencyOneMeasurement(allReadMeasurements.size());
 		
-		allMeasurements.add(result);
+		allReadMeasurements.add(result);
+		return result;
+	}
+	
+	public ConsistencyOneMeasurement getNewWriteConsistencyOneMeasurement(){
+		ConsistencyOneMeasurement result = new ConsistencyOneMeasurement(allWriteMeasurements.size());
+		
+		allWriteMeasurements.add(result);
 		return result;
 	}
 	
