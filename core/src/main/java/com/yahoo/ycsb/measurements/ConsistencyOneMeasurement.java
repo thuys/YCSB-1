@@ -60,4 +60,12 @@ public class ConsistencyOneMeasurement {
 			return 0;
 		return measurementInsertMap.get(type).get(time).size();
 	}
+
+	public Stack<Pair<Long, Long>>  getAllValues(OperationType type, long time) {
+		if(!measurementInsertMap.containsKey(type))
+			return new Stack<Pair<Long, Long>>();
+		if(!measurementInsertMap.get(type).containsKey(time))
+			return new Stack<Pair<Long, Long>>();
+		return measurementInsertMap.get(type).get(time);
+	}
 }
