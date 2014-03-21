@@ -1,5 +1,5 @@
 /**                                                                                                                                                                                
- * Copyright (c) 2010 Yahoo! Inc. All rights reserved.                                                                                                                             
+q * Copyright (c) 2010 Yahoo! Inc. All rights reserved.                                                                                                                             
  *                                                                                                                                                                                 
  * Licensed under the Apache License, Version 2.0 (the "License"); you                                                                                                             
  * may not use this file except in compliance with the License. You                                                                                                                
@@ -733,6 +733,9 @@ public class Client {
 	}
 	
 	private static final List<Workload> workloads = new ArrayList<Workload>();
+	private static final String READ_PROPORTION_CONSISTENCY_CHECK_PROPERTY = "readProportionConsistencyCheck";
+	private static final String UPDATE_PROPORTION_CONSISNTECY_CHECK_PROPERTY = "updateProportionConsistencyCheck";
+	private static final String ADD_SEPARATE_WORKLOAD_PROPERTY = "addSeparateWorkload";
 	
 	private static Vector<Thread> createClientThreads(String dbname,
 			Properties props, boolean dotransactions, int threadcount,
@@ -740,14 +743,17 @@ public class Client {
 		ClassLoader classLoader = Client.class.getClassLoader();
 		Vector<Thread> threads = new Vector<Thread>();
 		if(props.getProperty("consistencyTest") != null){
-			Thread writerThread = createWriterThreads(dbname, props,
+			Properties propsConsistencyCheck = addConsistencyCheckOperationDistribution(props);
+			Thread writerThread = createWriterThreads(dbname, propsConsistencyCheck,
 					dotransactions, opcount, measurements);
-			threads = createReaderThread(dbname, props, dotransactions,
+			threads = createReaderThread(dbname, propsConsistencyCheck, dotransactions,
 					opcount, measurements);
 			threads.add(writerThread);
-		} else{
+		}
+		if(props.getProperty(ADD_SEPARATE_WORKLOAD_PROPERTY) != null){
 			Class<?> workloadclass = classLoader.loadClass(props.getProperty(WORKLOAD_PROPERTY));
 			Workload workload = createWorkload(props, workloadclass);
+			// Thread id is hier niet belangrijk
 			threads.addAll(createAmountOfThreads(dbname, props, dotransactions, threadcount, 
 											targetperthreadperms, workload, opcount, true, 0));
 		}
@@ -775,6 +781,26 @@ public class Client {
 				writerWorkload, opcount, 0, false);
 	}
 
+	private static Properties addConsistencyCheckOperationDistribution(Properties props){
+		Properties newProps = (Properties) props.clone();
+		String updateProportionAsString = props.getProperty(UPDATE_PROPORTION_CONSISNTECY_CHECK_PROPERTY);
+		String insertProportionAsString = props.getProperty(READ_PROPORTION_CONSISTENCY_CHECK_PROPERTY);
+		if(!areValidOperationDistributions(updateProportionAsString, insertProportionAsString))
+			throw new IllegalArgumentException("Operation distributions do not sum to one");
+		newProps.setProperty("updateproportion", updateProportionAsString);
+		newProps.setProperty("insertproportion", insertProportionAsString);
+		newProps.setProperty("readproportion", "0");
+		newProps.setProperty("scanproportion", "0");
+		newProps.setProperty("readmodifywriteproportion", "0");
+		return newProps;
+	}
+	
+	private static boolean areValidOperationDistributions(String updateChanceAsString, String insertChanceAsString){
+		float updateChance = Float.parseFloat(updateChanceAsString);
+		float insetChance = Float.parseFloat(insertChanceAsString);
+		return (updateChance+insetChance == 1);
+	}
+	
 	private static int getAmountOfReadThreads(Properties props){
 		String readThreads = props.getProperty("readThreads");
 		try{
