@@ -85,7 +85,7 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 	}
 
 	HashMap<String, ByteIterator> buildValues() {
-		HashMap<String, ByteIterator> values = new HashMap<String, ByteIterator>();
+		HashMap<String, ByteIterator> values = super.buildValues();
 		String fieldkey = FIELD_WITH_TIMESTAMP;
 		String nextTimestampAsString = Long.toString(this.nextTimestamp);
 		ByteIterator data = new StringByteIterator(nextTimestampAsString);
