@@ -35,7 +35,10 @@ public class ConsistencyOneMeasurement {
 	}
 	
 	public Set<Long> getTimes(OperationType type){
-		return new TreeSet<Long>(measurementInsertMap.get(type).keySet());
+		if(measurementInsertMap.containsKey(type))
+			return new TreeSet<Long>(measurementInsertMap.get(type).keySet());
+		
+		return new TreeSet<Long>();
 	}
 	
 	public boolean hasDelay(OperationType type, long time){
