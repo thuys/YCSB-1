@@ -39,7 +39,5 @@ public class WriterWorkload extends ConsistencyTestWorkload {
 		InsertRunner insertRunner = new InsertRunner(db, dbkey, values, this);		
 		this.scheduleRunnableOnNextTimestamp(insertRunner);
 	}
-	
-	// TODO: make sure first operation is an insert operation
-	
+		
 }

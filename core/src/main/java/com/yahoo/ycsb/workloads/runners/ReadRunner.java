@@ -19,8 +19,9 @@ public class ReadRunner implements Runnable {
 	private ScheduledFuture<?> taskToCancel;
 	private final ConsistencyTestWorkload workload;
 	private final ConsistencyOneMeasurement oneMeasurement;
+	private final OperationType type; 
 	
-	public ReadRunner(long identifier, long expectedValue, String keyname,
+	public ReadRunner(OperationType type, long identifier, long expectedValue, String keyname,
 			HashSet<String> fields, DB db, ConsistencyTestWorkload workload, ConsistencyOneMeasurement oneMeasurement) {
 		super();
 		this.identifier = identifier;
@@ -30,6 +31,7 @@ public class ReadRunner implements Runnable {
 		this.db = db;
 		this.workload = workload;
 		this.oneMeasurement = oneMeasurement;
+		this.type = type;
 	}
 
 	public void setTask(ScheduledFuture<?> taskToCancel) {
@@ -61,8 +63,7 @@ public class ReadRunner implements Runnable {
 
 					System.err.println("consistency reached!!!");
 
-					// TODO: hacking in de client
-					this.oneMeasurement.addMeasurement(time, OperationType.INSERT, delay);
+					this.oneMeasurement.addMeasurement(time, this.type, delay);
 
 					// Remove
 					this.taskToCancel.cancel(false);

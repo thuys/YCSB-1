@@ -35,6 +35,8 @@ import com.yahoo.ycsb.measurements.Measurements;
 import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
 import com.yahoo.ycsb.measurements.exporter.TextMeasurementsExporter;
 import com.yahoo.ycsb.workloads.ConsistencyTestWorkload;
+import com.yahoo.ycsb.workloads.ReaderWorkload;
+import com.yahoo.ycsb.workloads.WriterWorkload;
 
 //import org.apache.log4j.BasicConfigurator;
 
@@ -738,8 +740,9 @@ public class Client {
 		ClassLoader classLoader = Client.class.getClassLoader();
 		Vector<Thread> threads = new Vector<Thread>();
 		if(props.getProperty("consistencyTest") != null){
-			Class<?> readerWorkloadclass = classLoader.loadClass("com.yahoo.ycsb.workloads.ReaderWorkload");
-			Class<?> writerWorkloadclass = classLoader.loadClass("com.yahoo.ycsb.workloads.WriterWorkload");
+			
+			Class<?> readerWorkloadclass = ReaderWorkload.class;
+			Class<?> writerWorkloadclass = WriterWorkload.class;
 			
 			int amountOfReadThreads = getAmountOfReadThreads(props);
 			ConsistencyTestWorkload writerWorkload = (ConsistencyTestWorkload) createWorkload(props, writerWorkloadclass);

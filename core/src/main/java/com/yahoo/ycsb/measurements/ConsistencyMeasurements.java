@@ -11,7 +11,11 @@ import java.util.TreeSet;
 public class ConsistencyMeasurements {
 	private Set<ConsistencyOneMeasurement> allMeasurements;
 	
-	private static final String INSERT_MATRIX_PROPERTY = "insertMatrixExportFile";
+	private static final String INSERT_MATRIX_DELAY_PROPERTY = "insertMatrixDelayExportFile";
+	private static final String UPDATE_MATRIX_DELAY_PROPERTY = "updateMatrixDelayExportFile";
+	private static final String INSERT_MATRIX_NB_OF_CHANGES_PROPERTY = "insertMatrixNbOfChangesExportFile";
+	private static final String UPDATE_MATRIX_NB_OF_CHANGES_PROPERTY = "updateMatrixNbOfChangesExportFile";
+	
 	
 	private final static String SEPERATOR = ",";
 
@@ -111,17 +115,57 @@ public class ConsistencyMeasurements {
 
 	public void export(Properties props) {
 		System.err.println("STARTING TO EXPORT");
-		if(props.getProperty(INSERT_MATRIX_PROPERTY) != null){
-			System.err.println("STARTING TO EXPORT-2");
+		
+		if(props.getProperty(INSERT_MATRIX_DELAY_PROPERTY) != null){
+			System.err.println("\tSTARTING TO EXPORT INSERT DELAY");
 
 			try {
-				PrintWriter out = new PrintWriter(props.getProperty(INSERT_MATRIX_PROPERTY));
+				PrintWriter out = new PrintWriter(props.getProperty(INSERT_MATRIX_DELAY_PROPERTY));
 				out.println(exportLastDelaysAsMatrix(OperationType.INSERT));
 				out.close();
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			}
-			System.err.println("ENDING EXPORT");
+			System.err.println("\tENDING EXPORT");
+		}
+		
+		if(props.getProperty(UPDATE_MATRIX_DELAY_PROPERTY) != null){
+			System.err.println("\tSTARTING TO EXPORT UPDATE DELAY");
+
+			try {
+				PrintWriter out = new PrintWriter(props.getProperty(UPDATE_MATRIX_DELAY_PROPERTY));
+				out.println(exportLastDelaysAsMatrix(OperationType.UPDATE));
+				out.close();
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+			System.err.println("\tENDING EXPORT");
+		}
+		
+		if(props.getProperty(INSERT_MATRIX_NB_OF_CHANGES_PROPERTY) != null){
+			System.err.println("\tSTARTING TO EXPORT INSERT NB OF CHANGES");
+
+			try {
+				PrintWriter out = new PrintWriter(props.getProperty(INSERT_MATRIX_NB_OF_CHANGES_PROPERTY));
+				out.println(exportNbOfDifferentDelaysAsMatrix(OperationType.INSERT));
+				out.close();
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+			System.err.println("\tENDING EXPORT");
+		}
+		
+		if(props.getProperty(UPDATE_MATRIX_NB_OF_CHANGES_PROPERTY) != null){
+			System.err.println("\tSTARTING TO EXPORT UPDATE NB OF CHANGES");
+
+			try {
+				PrintWriter out = new PrintWriter(props.getProperty(UPDATE_MATRIX_NB_OF_CHANGES_PROPERTY));
+				out.println(exportNbOfDifferentDelaysAsMatrix(OperationType.UPDATE));
+				out.close();
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+			System.err.println("\tENDING EXPORT");
 		}
 
 		
