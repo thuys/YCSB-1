@@ -785,12 +785,20 @@ public class Client {
 		Properties newProps = (Properties) props.clone();
 		String updateProportionAsString = props.getProperty(UPDATE_PROPORTION_CONSISNTECY_CHECK_PROPERTY);
 		String insertProportionAsString = props.getProperty(READ_PROPORTION_CONSISTENCY_CHECK_PROPERTY);
+		if(!areValidOperationDistributions(updateProportionAsString, insertProportionAsString))
+			throw new IllegalArgumentException("Operation distributions do not sum to one");
 		newProps.setProperty("updateproportion", updateProportionAsString);
 		newProps.setProperty("insertproportion", insertProportionAsString);
 		newProps.setProperty("readproportion", "0");
 		newProps.setProperty("scanproportion", "0");
 		newProps.setProperty("readmodifywriteproportion", "0");
 		return newProps;
+	}
+	
+	private static boolean areValidOperationDistributions(String updateChanceAsString, String insertChanceAsString){
+		float updateChance = Float.parseFloat(updateChanceAsString);
+		float insetChance = Float.parseFloat(insertChanceAsString);
+		return (updateChance+insetChance == 1);
 	}
 	
 	private static int getAmountOfReadThreads(Properties props){
