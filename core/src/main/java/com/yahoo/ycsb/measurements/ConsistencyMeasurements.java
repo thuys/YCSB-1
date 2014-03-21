@@ -91,7 +91,8 @@ public class ConsistencyMeasurements {
 			@Override
 			public String export(Long time,
 					ConsistencyOneMeasurement measurement) {
-				return Long.toString(measurement.getLastDelay(type, time));
+				Long temp =measurement.getLastDelay(type, time);
+				return temp==null?"NULL":temp.toString();
 			}
 		});
 	}
@@ -102,8 +103,10 @@ public class ConsistencyMeasurements {
 			@Override
 			public String export(Long time,
 					ConsistencyOneMeasurement measurement) {
-				return Integer.toString(measurement.getNumberOfDelays(type,
-						time));
+				Integer temp = measurement.getNumberOfDelays(type,
+						time);
+				return temp==null?"NULL":temp.toString();
+
 			}
 		});
 	}
