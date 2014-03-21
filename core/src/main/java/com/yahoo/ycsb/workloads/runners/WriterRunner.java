@@ -17,17 +17,22 @@ public abstract class WriterRunner implements Runnable {
 
 	protected final ConsistencyTestWorkload workload;
 	protected final ConsistencyOneMeasurement measurement;
+	
+	private final long maxDelayBeforeDropQuery;
 
+	
 	public WriterRunner(DB db, String dbKey,
 			HashMap<String, ByteIterator> values,
 			ConsistencyTestWorkload workload,
-			ConsistencyOneMeasurement oneMeasurement, long timeStamp) {
+			ConsistencyOneMeasurement oneMeasurement, long timeStamp,
+			long maxDelayBeforeDropQuery) {
 		this.db = db;
 		this.dbKey = dbKey;
 		this.values = values;
 		this.workload = workload;
 		this.timeStamp = timeStamp;
 		this.measurement = oneMeasurement;
+		this.maxDelayBeforeDropQuery = maxDelayBeforeDropQuery;
 	}
 
 	public void run() {
@@ -37,6 +42,12 @@ public abstract class WriterRunner implements Runnable {
 			System.err.println("WRITER_THREAD: inserting values: "
 					+ this.values + " for key: " + this.dbKey + " at "
 					+ start);
+			if(start > timeStamp + maxDelayBeforeDropQuery){
+				System.err.println("\tDrop of query out of time");
+				measurement.addMeasurement(timeStamp, getType(), start, null, null);
+				return;
+
+			}
 			// /////////
 			this.doRun();
 			long delay = (System.nanoTime() / 1000) - timeStamp;

@@ -14,8 +14,8 @@ public class InsertRunner extends WriterRunner {
 			HashMap<String, ByteIterator> values,
 			ConsistencyTestWorkload workload,
 			ConsistencyOneMeasurement oneMeasurement,
-			long timeStamp) {
-		super(db, dbKey, values, workload, oneMeasurement, timeStamp);
+			long timeStamp, long maxDelayBeforeDropQuery) {
+		super(db, dbKey, values, workload, oneMeasurement, timeStamp, maxDelayBeforeDropQuery);
 	}
 
 	@Override

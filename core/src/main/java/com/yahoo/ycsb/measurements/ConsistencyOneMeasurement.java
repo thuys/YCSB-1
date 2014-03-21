@@ -18,7 +18,7 @@ public class ConsistencyOneMeasurement {
 		
 	}
 	
-	public void addMeasurement(long time, OperationType type, long start, long delay, Long value){
+	public void addMeasurement(long time, OperationType type, long start, Long delay, Long value){
 		
 		if(!measurementInsertMap.containsKey(type)){
 			measurementInsertMap.put(type, new TreeMap<Long, Stack<Pair<Long, Long, Long>>>());

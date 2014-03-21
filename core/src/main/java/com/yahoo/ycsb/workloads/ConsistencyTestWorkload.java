@@ -22,6 +22,15 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 	private static final String DELAY_BETWEEN_THREADS_IN_MILLIS_PROPERTY = "threadDelayInMillis";
 	private static final String DEFAULT_DELAY_BETWEEN_THREADS_IN_MILLIS_PROPERTY = "0";
 	
+	public static final String MAX_DELAY_BEFORE_DROP = "maxDelayConsistencyBeforeDropInMicros";
+	public static final String MAX_DELAY_BEFORE_DROP_DEFAULT = "1000000000";
+
+	public static final String TIMEOUT_BEFORE_DROP = "timeoutConsistencyBeforeDropInMicros";
+	public static final String TIMEOUT_BEFORE_DROP_DEFAULT = "1000000000";
+	
+	public static final String STOP_ON_FIRST_CONSISTENCY = "stopOnFirstConsistency";
+	public static final String STOP_ON_FIRST_CONSISTENCY_DEFAULT = "true";
+
 	ScheduledThreadPoolExecutor executor;
 
 	protected long nextTimestamp;
@@ -35,6 +44,22 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 	private Random randomForUpdateOperations;
 	private long threadDelayMultiplier;
 	private long delayBetweenThreads;
+	
+	private long maxDelayBeforeDropQuery;
+	private long timeoutBeforeDrop;
+	private boolean stopOnFirstConsistency;
+	
+	protected long getMaxDelayBeforeDrop() {
+		return maxDelayBeforeDropQuery;
+	}
+	
+	protected boolean isStopOnFirstConsistency() {
+		return stopOnFirstConsistency;
+	}
+
+	protected long getTimeOut() {
+		return timeoutBeforeDrop;
+	}
 	
 	public ConsistencyTestWorkload() {
 		this.nextTimestamp = -1;
@@ -78,6 +103,19 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 				p.getProperty(NEW_REQUEST_PERIOD_PROPERTY), "Property \""
 						+ NEW_REQUEST_PERIOD_PROPERTY
 						+ "\" should be an long number");
+		
+		this.maxDelayBeforeDropQuery = this.convertToLong(
+				p.getProperty(MAX_DELAY_BEFORE_DROP, MAX_DELAY_BEFORE_DROP_DEFAULT), "Property \""
+						+ NEW_REQUEST_PERIOD_PROPERTY
+						+ "\" should be an long number");
+		this.stopOnFirstConsistency = this.convertToBoolean(
+				p.getProperty(STOP_ON_FIRST_CONSISTENCY, STOP_ON_FIRST_CONSISTENCY_DEFAULT), "Property \""
+						+ STOP_ON_FIRST_CONSISTENCY
+						+ "\" should be a boolean");
+		this.timeoutBeforeDrop = this.convertToLong(
+				p.getProperty(TIMEOUT_BEFORE_DROP, STOP_ON_FIRST_CONSISTENCY_DEFAULT), "Property \""
+						+ TIMEOUT_BEFORE_DROP
+						+ "\" should be an long number");
 	}
 
 	protected void updateTimestamp() {
@@ -116,6 +154,17 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 			throw new WorkloadException(errorMessage);
 		try {
 			return Long.parseLong(stringToConvert);
+		} catch (NumberFormatException exc) {
+			throw new WorkloadException(errorMessage);
+		}
+	}
+	
+	private boolean convertToBoolean(String stringToConvert, String errorMessage)
+			throws WorkloadException {
+		if (stringToConvert == null)
+			throw new WorkloadException(errorMessage);
+		try {
+			return Boolean.parseBoolean(stringToConvert);
 		} catch (NumberFormatException exc) {
 			throw new WorkloadException(errorMessage);
 		}

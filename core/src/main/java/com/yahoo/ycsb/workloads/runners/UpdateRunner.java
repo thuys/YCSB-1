@@ -13,8 +13,8 @@ public class UpdateRunner extends WriterRunner {
 	public UpdateRunner(DB db, String dbKey,
 			HashMap<String, ByteIterator> values,
 			ConsistencyTestWorkload workload,
-			ConsistencyOneMeasurement oneMeasurement, long timeStamp) {
-		super(db, dbKey, values, workload, oneMeasurement, timeStamp);
+			ConsistencyOneMeasurement oneMeasurement, long timeStamp, long maxDelayBeforeDropQuery) {
+		super(db, dbKey, values, workload, oneMeasurement, timeStamp, maxDelayBeforeDropQuery);
 	}
 
 	@Override
