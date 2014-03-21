@@ -34,7 +34,7 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 	ScheduledThreadPoolExecutor executor;
 
 	protected long nextTimestamp;
-	protected static final String FIELD_WITH_TIMESTAMP = "field0";
+	protected static final String FIELD_WITH_TIMESTAMP = "field1";
 	protected ConsistencyOneMeasurement oneMeasurement;
 	protected long delayBetweenConsistencyChecks;
 	protected boolean firstOperation;
@@ -123,7 +123,7 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 	}
 
 	HashMap<String, ByteIterator> buildValues() {
-		HashMap<String, ByteIterator> values = new HashMap<String, ByteIterator>();
+		HashMap<String, ByteIterator> values = super.buildValues();
 		String fieldkey = FIELD_WITH_TIMESTAMP;
 		String nextTimestampAsString = Long.toString(this.nextTimestamp);
 		ByteIterator data = new StringByteIterator(nextTimestampAsString);
