@@ -11,4 +11,4 @@
 * insertMatrixNbOfChangesExportFile (path)
 * updateMatrixNbOfChangesExportFile (path)
 * useFixedOperationDistributionSeed (bool)
-* operationDistributionSeed (bool)
+* operationDistributionSeed (int)
