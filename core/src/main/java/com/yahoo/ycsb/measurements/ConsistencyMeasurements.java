@@ -3,7 +3,6 @@ package com.yahoo.ycsb.measurements;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
@@ -19,7 +18,7 @@ public class ConsistencyMeasurements {
 	private static final String UPDATE_MATRIX_DELAY_PROPERTY = "updateMatrixDelayExportFile";
 	private static final String INSERT_MATRIX_NB_OF_CHANGES_PROPERTY = "insertMatrixNbOfChangesExportFile";
 	private static final String UPDATE_MATRIX_NB_OF_CHANGES_PROPERTY = "updateMatrixNbOfChangesExportFile";
-	
+
 	private static final String INSERT_MATRIX_RAW_PROPERTY = "insertMatrixRawExportFile";
 	private static final String UPDATE_MATRIX_RAW_PROPERTY = "updateMatrixRawExportFile";
 
@@ -147,16 +146,18 @@ public class ConsistencyMeasurements {
 
 	private String exportRawData(OperationType type) {
 		String output = "Time(micros)" + SEPERATOR + "Thread" + SEPERATOR
-				+ " Start(micros)" + SEPERATOR + "Delay (micros)" + "\n";
+				+ " Start(micros)" + SEPERATOR + "Delay (micros)" + SEPERATOR
+				+ "Value\n";
 
 		for (Long time : getAllTimings(type)) {
 			for (ConsistencyOneMeasurement measurement : allWriteMeasurements) {
 				if (measurement.hasDelay(type, time)) {
-					for (Pair<Long, Long> keys : measurement.getAllValues(type,
-							time)) {
+					for (Pair<Long, Long, Long> keys : measurement
+							.getAllValues(type, time)) {
 						output += time + SEPERATOR + "W-"
 								+ measurement.getThreadNumber() + SEPERATOR
-								+ keys.getX() + SEPERATOR + keys.getY() + "\n";
+								+ keys.getX() + SEPERATOR + keys.getY()
+								+ SEPERATOR + keys.getZ() + "\n";
 
 					}
 				}
@@ -164,11 +165,12 @@ public class ConsistencyMeasurements {
 			}
 			for (ConsistencyOneMeasurement measurement : allReadMeasurements) {
 				if (measurement.hasDelay(type, time)) {
-					for (Pair<Long, Long> keys : measurement.getAllValues(type,
-							time)) {
+					for (Pair<Long, Long, Long> keys : measurement
+							.getAllValues(type, time)) {
 						output += time + SEPERATOR + "R-"
 								+ measurement.getThreadNumber() + SEPERATOR
-								+ keys.getX() + SEPERATOR + keys.getY() + "\n";
+								+ keys.getX() + SEPERATOR + keys.getY()
+								+ SEPERATOR + keys.getZ() + "\n";
 
 					}
 				}
@@ -257,7 +259,7 @@ public class ConsistencyMeasurements {
 			}
 			System.err.println("\tENDING EXPORT");
 		}
-		
+
 		if (props.getProperty(INSERT_MATRIX_RAW_PROPERTY) != null) {
 			System.err.println("\tSTARTING TO EXPORT INSERT RAW");
 
@@ -271,7 +273,7 @@ public class ConsistencyMeasurements {
 			}
 			System.err.println("\tENDING EXPORT");
 		}
-		
+
 		if (props.getProperty(UPDATE_MATRIX_RAW_PROPERTY) != null) {
 			System.err.println("\tSTARTING TO EXPORT UPDATE RAW");
 

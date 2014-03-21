@@ -40,7 +40,7 @@ public abstract class WriterRunner implements Runnable {
 			// /////////
 			this.doRun();
 			long delay = (System.nanoTime() / 1000) - timeStamp;
-			measurement.addMeasurement(timeStamp, getType(), start, delay);
+			measurement.addMeasurement(timeStamp, getType(), start, delay, timeStamp);
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}

@@ -60,7 +60,7 @@ public class ReadRunner implements Runnable {
 				System.err.println("\t2\t" + temp);
 				
 				if(!readValue.checkKey(time)){
-					this.oneMeasurement.addMeasurement(this.expectedValue, this.type, start, delay);
+					this.oneMeasurement.addMeasurement(this.expectedValue, this.type, start, delay, time);
 				}
 				readValue.setKey(time);
 				
@@ -72,7 +72,7 @@ public class ReadRunner implements Runnable {
 				}
 			} else {
 				if(!readValue.hasReadValue() || readValue.hasReadKey())
-					this.oneMeasurement.addMeasurement(this.expectedValue, this.type, start, delay);
+					this.oneMeasurement.addMeasurement(this.expectedValue, this.type, start, delay, null);
 				
 				readValue.setReadKey(false);
 				System.err.println("\t null ");

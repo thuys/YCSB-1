@@ -9,25 +9,25 @@ import java.util.TreeSet;
 import com.yahoo.ycsb.util.Pair;
 
 public class ConsistencyOneMeasurement {
-	private HashMap<OperationType, TreeMap<Long, Stack<Pair<Long, Long>>>> measurementInsertMap;	
+	private HashMap<OperationType, TreeMap<Long, Stack<Pair<Long, Long, Long>>>> measurementInsertMap;	
 	private int threadNumber;
 	
 	ConsistencyOneMeasurement(int threadNumber){
 		this.threadNumber = threadNumber;
-		measurementInsertMap = new HashMap<OperationType, TreeMap<Long, Stack<Pair<Long, Long>>>>();
+		measurementInsertMap = new HashMap<OperationType, TreeMap<Long, Stack<Pair<Long, Long, Long>>>>();
 		
 	}
 	
-	public void addMeasurement(long time, OperationType type, long start, long delay){
+	public void addMeasurement(long time, OperationType type, long start, long delay, Long value){
 		
 		if(!measurementInsertMap.containsKey(type)){
-			measurementInsertMap.put(type, new TreeMap<Long, Stack<Pair<Long, Long>>>());
+			measurementInsertMap.put(type, new TreeMap<Long, Stack<Pair<Long, Long, Long>>>());
 		}
 		if(!measurementInsertMap.get(type).containsKey(time)){
-			measurementInsertMap.get(type).put(time, new Stack<Pair<Long, Long>>());
+			measurementInsertMap.get(type).put(time, new Stack<Pair<Long, Long, Long>>());
 		}
 		
-		measurementInsertMap.get(type).get(time).add(new Pair<Long, Long>(start, delay));
+		measurementInsertMap.get(type).get(time).add(new Pair<Long, Long, Long>(start, delay, value));
 	}
 	
 	public int getThreadNumber(){
@@ -61,11 +61,11 @@ public class ConsistencyOneMeasurement {
 		return measurementInsertMap.get(type).get(time).size();
 	}
 
-	public Stack<Pair<Long, Long>>  getAllValues(OperationType type, long time) {
+	public Stack<Pair<Long, Long, Long>>  getAllValues(OperationType type, long time) {
 		if(!measurementInsertMap.containsKey(type))
-			return new Stack<Pair<Long, Long>>();
+			return new Stack<Pair<Long, Long, Long>>();
 		if(!measurementInsertMap.get(type).containsKey(time))
-			return new Stack<Pair<Long, Long>>();
+			return new Stack<Pair<Long, Long, Long>>();
 		return measurementInsertMap.get(type).get(time);
 	}
 }
