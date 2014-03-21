@@ -20,6 +20,7 @@ public class ReadRunner implements Runnable {
 	private final ConsistencyTestWorkload workload;
 	private final ConsistencyOneMeasurement oneMeasurement;
 	private final OperationType type; 
+	private final LastReadValue readValue;
 	
 	public ReadRunner(OperationType type, long identifier, long expectedValue, String keyname,
 			HashSet<String> fields, DB db, ConsistencyTestWorkload workload, ConsistencyOneMeasurement oneMeasurement) {
@@ -32,6 +33,7 @@ public class ReadRunner implements Runnable {
 		this.workload = workload;
 		this.oneMeasurement = oneMeasurement;
 		this.type = type;
+		this.readValue = new LastReadValue();
 	}
 
 	public void setTask(ScheduledFuture<?> taskToCancel) {
@@ -48,25 +50,31 @@ public class ReadRunner implements Runnable {
 
 			// TODO: check of meting in measurement interval ligt
 			ByteIterator readValueAsByteIterator = getReadResult();
-
+			
+			long delay = System.nanoTime() / 1000 - this.expectedValue;
+			
 			if (readValueAsByteIterator != null) {
 				String temp = readValueAsByteIterator.toString().trim();
 
 				long time = Long.parseLong(temp);
 				System.err.println("\t2\t" + temp);
-
+				
+				if(!readValue.checkKey(time)){
+					this.oneMeasurement.addMeasurement(this.expectedValue, this.type, start, delay);
+				}
+				readValue.setKey(time);
+				
 				if (time == this.expectedValue) {
-
-					long delay = System.nanoTime() / 1000 - time;
-
 					System.err.println("consistency reached!!!");
-
-					this.oneMeasurement.addMeasurement(time, this.type, start, delay);
 
 					// Remove
 					this.taskToCancel.cancel(false);
 				}
 			} else {
+				if(!readValue.hasReadValue() || readValue.hasReadKey())
+					this.oneMeasurement.addMeasurement(this.expectedValue, this.type, start, delay);
+				
+				readValue.setReadKey(false);
 				System.err.println("\t null ");
 			}
 		} catch (Throwable e) {
