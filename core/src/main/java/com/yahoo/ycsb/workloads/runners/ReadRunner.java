@@ -41,29 +41,27 @@ public class ReadRunner implements Runnable {
 	@Override
 	public void run() {
 		try {
+			long start = System.nanoTime() / 1000;
+			
 			System.err.println("READING_THREAD: reading key : "
-					+ keyname + " for value: " + expectedValue + " at " + (System.nanoTime()/1000));
+					+ keyname + " for value: " + expectedValue + " at " + start);
 
 			// TODO: check of meting in measurement interval ligt
-			HashMap<String, ByteIterator> readResult = new HashMap<String, ByteIterator>();
-			String tableName = this.workload.getTableName();
-			this.db.read(tableName, this.keyname, this.fields, readResult);
-			ByteIterator readValueAsByteIterator = readResult
-					.get(this.workload.getFieldWithTimestamp());
+			ByteIterator readValueAsByteIterator = getReadResult();
 
 			if (readValueAsByteIterator != null) {
 				String temp = readValueAsByteIterator.toString().trim();
 
 				long time = Long.parseLong(temp);
 				System.err.println("\t2\t" + temp);
-				// System.err.println("queue: " + executor.getTaskCount());
+
 				if (time == this.expectedValue) {
 
 					long delay = System.nanoTime() / 1000 - time;
 
 					System.err.println("consistency reached!!!");
 
-					this.oneMeasurement.addMeasurement(time, this.type, delay);
+					this.oneMeasurement.addMeasurement(time, this.type, start, delay);
 
 					// Remove
 					this.taskToCancel.cancel(false);
@@ -76,5 +74,14 @@ public class ReadRunner implements Runnable {
 		}
 		// TODO Check for time out
 		System.err.println("READ RUN FINISHED");
+	}
+
+	private ByteIterator getReadResult() {
+		HashMap<String, ByteIterator> readResult = new HashMap<String, ByteIterator>();
+		String tableName = this.workload.getTableName();
+		this.db.read(tableName, this.keyname, this.fields, readResult);
+		ByteIterator readValueAsByteIterator = readResult
+				.get(this.workload.getFieldWithTimestamp());
+		return readValueAsByteIterator;
 	}
 }
