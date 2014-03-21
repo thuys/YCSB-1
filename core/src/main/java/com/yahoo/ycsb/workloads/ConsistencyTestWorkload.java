@@ -203,4 +203,9 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 		return (this.delayBetweenThreads * this.threadDelayMultiplier);
 	}
 	
+	protected long getNextTimeStamp() {
+		return this.nextTimestamp;
+	}
+		
+	
 }

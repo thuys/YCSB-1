@@ -21,7 +21,7 @@ public class WriterWorkload extends ConsistencyTestWorkload {
 			long blub = (this.nextTimestamp - (System.nanoTime() / 1000) + this.getDelayForThread());
 			System.err.println("Planning update at " + (System.nanoTime() / 1000) + " for " + blub);
 			
-			UpdateRunner updateRunner = new UpdateRunner(db, dbkey, values, this);		
+			UpdateRunner updateRunner = new UpdateRunner(db, dbkey, values, this, oneMeasurement, getNextTimeStamp());		
 			this.scheduleRunnableOnNextTimestamp(updateRunner);
 		}
 	}
@@ -36,8 +36,9 @@ public class WriterWorkload extends ConsistencyTestWorkload {
 		long blub = (this.nextTimestamp - (System.nanoTime() / 1000) + this.getDelayForThread());
 		System.err.println("Planning insert at " + (System.nanoTime() / 1000) + " for " + blub);
 		
-		InsertRunner insertRunner = new InsertRunner(db, dbkey, values, this);		
+		InsertRunner insertRunner = new InsertRunner(db, dbkey, values, this, oneMeasurement, getNextTimeStamp());		
 		this.scheduleRunnableOnNextTimestamp(insertRunner);
 	}
-		
+
+
 }

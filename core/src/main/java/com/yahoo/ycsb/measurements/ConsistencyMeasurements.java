@@ -2,6 +2,7 @@ package com.yahoo.ycsb.measurements;
 
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -22,8 +23,25 @@ public class ConsistencyMeasurements {
 	private final static String SEPERATOR = ",";
 
 	public ConsistencyMeasurements() {
-		this.allReadMeasurements = new HashSet<ConsistencyOneMeasurement>();
-		this.allWriteMeasurements = new HashSet<ConsistencyOneMeasurement>();
+		this.allReadMeasurements = new TreeSet<ConsistencyOneMeasurement>(getTreeSetComparator());
+		this.allWriteMeasurements = new TreeSet<ConsistencyOneMeasurement>(getTreeSetComparator());
+	}
+
+	private Comparator<ConsistencyOneMeasurement> getTreeSetComparator() {
+		return new Comparator<ConsistencyOneMeasurement>() {
+
+			@Override
+			public int compare(ConsistencyOneMeasurement o1,
+					ConsistencyOneMeasurement o2) {
+				if(o1 == null){
+					return -1;
+				}
+				if(o2 == null){
+					return 1;
+				}
+				return Integer.compare(o1.getThreadNumber(), o2.getThreadNumber());
+			}
+		};
 	}
 
 	public void addMeasurement(ConsistencyOneMeasurement measurement) {
@@ -81,17 +99,25 @@ public class ConsistencyMeasurements {
 		String output = "";
 		
 		// First line with header
-		Set<Integer> threadIds = new TreeSet<Integer>();
 		output += SEPERATOR;
 		
+		for(ConsistencyOneMeasurement measurement : allWriteMeasurements){
+			output += "W-" + measurement.getThreadNumber() + SEPERATOR;
+		}
+		
 		for(ConsistencyOneMeasurement measurement : allReadMeasurements){
-			threadIds.add(measurement.getThreadNumber());
-			output += measurement.getThreadNumber() + SEPERATOR;
+			output += "R-" + measurement.getThreadNumber() + SEPERATOR;
 		}
 		output += "\n";
 		
 		for(Long time :getAllTimings(type)){
 			output += time + SEPERATOR;
+			for(ConsistencyOneMeasurement measurement : allWriteMeasurements){
+				if(measurement.hasDelay(type, time)){
+					output += export.export(time, measurement);
+				}
+				output += SEPERATOR;
+			}
 			for(ConsistencyOneMeasurement measurement : allReadMeasurements){
 				if(measurement.hasDelay(type, time)){
 					output += export.export(time, measurement);
