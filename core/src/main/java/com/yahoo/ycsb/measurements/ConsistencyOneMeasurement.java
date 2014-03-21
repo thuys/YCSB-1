@@ -26,7 +26,7 @@ public class ConsistencyOneMeasurement {
 		if(!measurementInsertMap.get(type).containsKey(time)){
 			measurementInsertMap.get(type).put(time, new Stack<Long>());
 		}
-		measurementInsertMap.get(time).get(type).add(delay);
+		measurementInsertMap.get(type).get(time).add(delay);
 	}
 	
 	public int getThreadNumber(){
