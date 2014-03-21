@@ -341,7 +341,7 @@ public class CoreWorkload extends Workload
 		}
 
 		keysequence=new CounterGenerator(insertstart);
-		operationchooser=new DiscreteGenerator();
+		operationchooser=new DiscreteGenerator(p);
 		if (readproportion>0)
 		{
 			operationchooser.addValue(readproportion,"READ");
