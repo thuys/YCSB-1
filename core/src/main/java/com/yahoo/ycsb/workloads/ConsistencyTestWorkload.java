@@ -25,7 +25,7 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 	ScheduledThreadPoolExecutor executor;
 
 	protected long nextTimestamp;
-	protected static final String FIELD_WITH_TIMESTAMP = "field0";
+	protected static final String FIELD_WITH_TIMESTAMP = "field1";
 	protected ConsistencyOneMeasurement oneMeasurement;
 	protected long delayBetweenConsistencyChecks;
 	protected boolean firstOperation;
