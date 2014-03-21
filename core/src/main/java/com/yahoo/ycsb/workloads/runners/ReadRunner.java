@@ -55,9 +55,9 @@ public class ReadRunner implements Runnable {
 			
 			if (readValueAsByteIterator != null) {
 				String temp = readValueAsByteIterator.toString().trim();
-
-				long time = Long.parseLong(temp);
 				System.err.println("\t2\t" + temp);
+				long time = Long.parseLong(temp);
+				
 				
 				if(!readValue.checkKey(time)){
 					this.oneMeasurement.addMeasurement(this.expectedValue, this.type, start, delay, time);
