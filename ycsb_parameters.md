@@ -19,3 +19,4 @@
 * addSeparateWorkload (bool)
 * maxDelayConsistencyBeforeDropInMicros (micros)
 * timeoutConsistencyBeforeDropInMicros (micros)
+* stopOnFirstConsistency (bool)
