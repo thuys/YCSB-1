@@ -113,7 +113,7 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 						+ STOP_ON_FIRST_CONSISTENCY
 						+ "\" should be a boolean");
 		this.timeoutBeforeDrop = this.convertToLong(
-				p.getProperty(TIMEOUT_BEFORE_DROP, STOP_ON_FIRST_CONSISTENCY_DEFAULT), "Property \""
+				p.getProperty(TIMEOUT_BEFORE_DROP, TIMEOUT_BEFORE_DROP_DEFAULT), "Property \""
 						+ TIMEOUT_BEFORE_DROP
 						+ "\" should be an long number");
 	}
