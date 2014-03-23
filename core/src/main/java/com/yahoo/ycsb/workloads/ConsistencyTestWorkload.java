@@ -247,7 +247,6 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 	}
 	
 	protected long getDelayForThread(){
-		System.err.println("Delay: " + (this.delayBetweenThreads * this.threadDelayMultiplier));
 		return (this.delayBetweenThreads * this.threadDelayMultiplier);
 	}
 	

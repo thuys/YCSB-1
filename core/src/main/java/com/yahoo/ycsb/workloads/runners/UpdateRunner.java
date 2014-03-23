@@ -16,11 +16,11 @@ public class UpdateRunner extends WriterRunner {
 			ConsistencyOneMeasurement oneMeasurement, long timeStamp, long maxDelayBeforeDropQuery) {
 		super(db, dbKey, values, workload, oneMeasurement, timeStamp, maxDelayBeforeDropQuery);
 	}
-
+	
 	@Override
 	protected void doRun() {
 		String tableName = this.workload.getTableName();
-		System.err.println("Update key: " + this.dbKey + ", keycounter: " + this.workload.getKeyCounter());
+		System.err.println("##############################Update key: " + this.dbKey + ", keycounter: " + this.workload.getKeyCounter());
 		this.db.update(tableName, this.dbKey, this.values);
 	}
 	
