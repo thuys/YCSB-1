@@ -11,7 +11,6 @@ import com.yahoo.ycsb.DB;
 import com.yahoo.ycsb.StringByteIterator;
 import com.yahoo.ycsb.WorkloadException;
 import com.yahoo.ycsb.measurements.ConsistencyOneMeasurement;
-import com.yahoo.ycsb.measurements.OperationType;
 
 public abstract class ConsistencyTestWorkload extends CoreWorkload {
 
@@ -255,6 +254,9 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 	protected long getNextTimeStamp() {
 		return this.nextTimestamp;
 	}
-		
+	
+	public int getKeyCounter(){
+		return this.keyCounter;
+	}
 	
 }

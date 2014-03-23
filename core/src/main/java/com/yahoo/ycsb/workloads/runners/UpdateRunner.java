@@ -20,6 +20,7 @@ public class UpdateRunner extends WriterRunner {
 	@Override
 	protected void doRun() {
 		String tableName = this.workload.getTableName();
+		System.err.println("Update key: " + this.dbKey + ", keycounter: " + this.workload.getKeyCounter());
 		this.db.update(tableName, this.dbKey, this.values);
 	}
 	
