@@ -10,6 +10,8 @@ import com.yahoo.ycsb.workloads.runners.ReadRunner;
 
 public class ReaderWorkload extends ConsistencyTestWorkload{
 	
+	private long delayBetweenReadThreadsInMicros = 0;
+	
 	public void doTransactionUpdate(DB db) {
 		if(this.firstOperation){
 			doTransactionInsert(db);
@@ -18,6 +20,14 @@ public class ReaderWorkload extends ConsistencyTestWorkload{
 			String dbkey = buildKeyForUpdate();
 			this.checkConsistency(OperationType.UPDATE, db, dbkey);
 		}
+	}
+	
+	public void setDelayBetweenReadThreads(long delayInMicros){
+		this.delayBetweenReadThreadsInMicros = delayInMicros;
+	}
+	
+	public long getDelayBetweenReadTheadsInMicros(){
+		return this.delayBetweenReadThreadsInMicros;
 	}
 
 	public void doTransactionInsert(final DB db) {
@@ -32,7 +42,8 @@ public class ReaderWorkload extends ConsistencyTestWorkload{
 		HashSet<String> fields = new HashSet<String>();
 		fields.add(FIELD_WITH_TIMESTAMP);
 		long currentTiming = System.nanoTime();
-		long initialDelay = this.nextTimestamp - (currentTiming / 1000) + this.getDelayForThread();
+		
+		long initialDelay = this.nextTimestamp - (currentTiming / 1000) + this.getDelayBetweenReadTheadsInMicros();
 		long expectedValue = this.nextTimestamp;
 		
 		System.err.println("Planning read at " + (System.nanoTime() / 1000) + " for " + initialDelay);

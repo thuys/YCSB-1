@@ -763,9 +763,8 @@ public class Client {
 	private static Vector<Thread> createReaderThread(String dbname,
 			Properties props, boolean dotransactions, int opcount,
 			ConsistencyMeasurements measurements) {
-		Class<?> readerWorkloadclass = ReaderWorkload.class;
 		int amountOfReadThreads = getAmountOfReadThreads(props);
-		List<Workload> readerWorkloads = getReaderWorkloads(props, readerWorkloadclass, amountOfReadThreads, measurements);
+		List<Workload> readerWorkloads = getReaderWorkloads(props, amountOfReadThreads, measurements);
 		return createAmountOfThreads(dbname, props, dotransactions, amountOfReadThreads, getTargetToConsistencyWorkload(props), 
 														readerWorkloads, opcount, false, 1);
 	}
@@ -776,7 +775,6 @@ public class Client {
 		Class<?> writerWorkloadclass = WriterWorkload.class;
 		ConsistencyTestWorkload writerWorkload = (ConsistencyTestWorkload) createWorkload(props, writerWorkloadclass);
 		writerWorkload.setOneMeasurement(measurements.getNewWriteConsistencyOneMeasurement());
-		writerWorkload.setThreadDelayMultiplier(0);
 		return createClientThread(dbname, props, dotransactions, 1, getTargetToConsistencyWorkload(props), 
 				writerWorkload, opcount, 0, false);
 	}
@@ -816,15 +814,18 @@ public class Client {
 		return (1/dummy)*1.1;
 	}
 	
-	private static List<Workload> getReaderWorkloads(Properties prop, Class<?> workloadclass, int amount, ConsistencyMeasurements measurements){
+	private static List<Workload> getReaderWorkloads(Properties prop, int amount, ConsistencyMeasurements measurements){
 		List<Workload> result = new ArrayList<Workload>();
+		Class<?> workloadclass = ReaderWorkload.class;
 		for(int i=0; i<amount; i++){
 			//TODO: resetten van target
-			ConsistencyTestWorkload workload = (ConsistencyTestWorkload) createWorkload(prop, workloadclass); 
+			ReaderWorkload workload = (ReaderWorkload) createWorkload(prop, workloadclass);
+			// Schedule first read thread one microsecond after write thread
+			long delayToWriterThread = ((workload.getNewRequestPriodInMicros()/amount)*i)+1;
 			result.add(workload);
 			ConsistencyOneMeasurement measurement = measurements.getNewReadConsistencyOneMeasurement();
 			workload.setOneMeasurement(measurement);
-			workload.setThreadDelayMultiplier(i);
+			workload.setDelayBetweenReadThreads(delayToWriterThread);
 		}
 		return result;
 	}

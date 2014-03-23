@@ -18,8 +18,6 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 	private static final String DEFAULT_START_POINT_PROPERTY = "10000";
 	private static final String CONSISTENCY_DELAY_PROPERTY = "consistencyDelayMillis";
 	public static final String NEW_REQUEST_PERIOD_PROPERTY = "newrequestperiodMillis";
-	private static final String DELAY_BETWEEN_THREADS_IN_MILLIS_PROPERTY = "threadDelayInMillis";
-	private static final String DEFAULT_DELAY_BETWEEN_THREADS_IN_MILLIS_PROPERTY = "0";
 	
 	public static final String MAX_DELAY_BEFORE_DROP = "maxDelayConsistencyBeforeDropInMicros";
 	public static final String MAX_DELAY_BEFORE_DROP_DEFAULT = "1000000000";
@@ -41,8 +39,6 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 	private int keyCounter;
 	private long newRequestPeriod;
 	private Random randomForUpdateOperations;
-	private long threadDelayMultiplier;
-	private long delayBetweenThreads;
 	
 	private long maxDelayBeforeDropQuery;
 	private long timeoutBeforeDrop;
@@ -79,11 +75,6 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 				+ this.convertToLong(startTimeAsString, "Property \""
 						+ START_POINT_PROPERTY
 						+ "\" should be an integer number")*1000;
-		
-		String delayBetweenThreadsAsString = p.getProperty(DELAY_BETWEEN_THREADS_IN_MILLIS_PROPERTY, 
-													DEFAULT_DELAY_BETWEEN_THREADS_IN_MILLIS_PROPERTY);
-		this.delayBetweenThreads = this.convertToLong(delayBetweenThreadsAsString, 
-				"\"" + DELAY_BETWEEN_THREADS_IN_MILLIS_PROPERTY + "\" property should be an long type")*1000;
 		
 		System.err.println("FIRST NEXT TIMESTAMP: " + this.nextTimestamp);
 		System.err.println("CURRENT TIME: " + System.nanoTime()/1000);
@@ -206,7 +197,7 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 	}
 	
 	protected void scheduleRunnableOnNextTimestamp(Runnable runnable){
-		long sleepTime = this.nextTimestamp - (System.nanoTime() / 1000) + this.getDelayForThread();
+		long sleepTime = this.nextTimestamp - (System.nanoTime() / 1000);
 		this.executor.schedule(runnable, sleepTime, TimeUnit.MICROSECONDS);
 		this.updateTimestamp();
 	}
@@ -242,20 +233,16 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 		}
 	}
 	
-	public void setThreadDelayMultiplier(int multiplier){
-		this.threadDelayMultiplier = multiplier;
-	}
-	
-	protected long getDelayForThread(){
-		return (this.delayBetweenThreads * this.threadDelayMultiplier);
-	}
-	
 	protected long getNextTimeStamp() {
 		return this.nextTimestamp;
 	}
 	
 	public int getKeyCounter(){
 		return this.keyCounter;
+	}
+	
+	public long getNewRequestPriodInMicros(){
+		return this.newRequestPeriod;
 	}
 	
 }

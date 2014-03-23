@@ -18,7 +18,7 @@ public class WriterWorkload extends ConsistencyTestWorkload {
 			final String dbkey = buildKeyForUpdate();
 			final HashMap<String, ByteIterator> values = buildValues();
 			
-			long blub = (this.nextTimestamp - (System.nanoTime() / 1000) + this.getDelayForThread());
+			long blub = (this.nextTimestamp - (System.nanoTime() / 1000));
 			System.err.println("Planning update at " + (System.nanoTime() / 1000) + " for " + blub);
 			
 			UpdateRunner updateRunner = new UpdateRunner(db, dbkey, values, this, oneMeasurement, getNextTimeStamp(), getMaxDelayBeforeDrop());		
@@ -33,7 +33,7 @@ public class WriterWorkload extends ConsistencyTestWorkload {
 		final String dbkey = buildKeyName(keynum);
 		final HashMap<String, ByteIterator> values = buildValues();
 		
-		long blub = (this.nextTimestamp - (System.nanoTime() / 1000) + this.getDelayForThread());
+		long blub = (this.nextTimestamp - (System.nanoTime() / 1000));
 		System.err.println("Planning insert at " + (System.nanoTime() / 1000) + " for " + blub);
 		
 		InsertRunner insertRunner = new InsertRunner(db, dbkey, values, this, oneMeasurement, getNextTimeStamp(), getMaxDelayBeforeDrop());		
