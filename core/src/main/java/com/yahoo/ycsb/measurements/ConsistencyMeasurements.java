@@ -283,7 +283,7 @@ public class ConsistencyMeasurements {
 			try {
 				PrintWriter out = new PrintWriter(
 						props.getProperty(UPDATE_MATRIX_RAW_PROPERTY));
-				out.println(exportRawData(OperationType.INSERT));
+				out.println(exportRawData(OperationType.UPDATE));
 				out.close();
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
