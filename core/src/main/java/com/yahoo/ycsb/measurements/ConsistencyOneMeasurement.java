@@ -28,6 +28,10 @@ public class ConsistencyOneMeasurement {
 		}
 		
 		measurementInsertMap.get(type).get(time).add(new Pair<Long, Long, Long>(start, delay, value));
+		
+		for(Pair<Long, Long, Long> pair : measurementInsertMap.get(type).get(time))
+			System.err.println("###Content###\nPair: x=" + pair.getX() + ", y=" + pair.getY() + ", z=" + pair.getZ());
+		
 	}
 	
 	public int getThreadNumber(){

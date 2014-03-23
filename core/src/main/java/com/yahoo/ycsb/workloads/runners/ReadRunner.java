@@ -96,7 +96,6 @@ public class ReadRunner implements Runnable {
 				long time = Long.parseLong(temp);
 
 				if (!readValue.checkKey(time)) {
-					System.err.println("######################## value not null");
 					this.oneMeasurement.addMeasurement(this.expectedValue,
 							this.type, start, delay, time);
 				}
@@ -112,7 +111,6 @@ public class ReadRunner implements Runnable {
 				}
 			} else {
 				if (!readValue.hasReadValue() || readValue.hasReadKey()){
-					System.err.println("######################## value null");
 					this.oneMeasurement.addMeasurement(this.expectedValue,
 							this.type, start, delay, null);
 				}
