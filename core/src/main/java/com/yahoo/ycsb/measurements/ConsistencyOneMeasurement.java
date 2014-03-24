@@ -48,7 +48,7 @@ public class ConsistencyOneMeasurement {
 	public Long getLastDelay(OperationType type, long time){
 		Pair<Long, Long, Long> last = null;
 		Stack<Pair<Long, Long, Long>> stack = measurementInsertMap.get(type).get(time);
-		for(int j = stack.size()-1; j >= 0; j++){
+		for(int j = stack.size()-1; j >= 0; j--){
 			Pair<Long, Long, Long> current = stack.get(j);
 			if(last == null)
 				last = current;
@@ -84,7 +84,7 @@ public class ConsistencyOneMeasurement {
 		int number = 0;
 		Pair<Long, Long, Long> last = null;
 		Stack<Pair<Long, Long, Long>> stack = measurementInsertMap.get(type).get(time);
-		for(int j = stack.size()-1; j >= 0; j++){
+		for(int j = stack.size()-1; j >= 0; j--){
 			Pair<Long, Long, Long> current = stack.get(j);
 			if(last == null){
 				number++;
