@@ -60,7 +60,7 @@ public class TerminatorThread extends Thread {
 	    	if(timeToSleep>0)
 	    		Thread.sleep(timeToSleep);
 	    } catch (InterruptedException e) {
-	      System.err.println("Could not wait until max specified time, TerminatorThread interrupted:.");
+	      System.err.println("Could not wait until max specified time, TerminatorThread interrupted:" +timeToSleep);
 	      e.printStackTrace();
 	      
 	    }
