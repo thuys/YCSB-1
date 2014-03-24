@@ -53,7 +53,8 @@ public class TerminatorThread extends Thread {
     try {
       Thread.sleep(maxExecutionTime * 1000);
     } catch (InterruptedException e) {
-      System.err.println("Could not wait until max specified time, TerminatorThread interrupted.");
+      System.err.println("Could not wait until max specified time, TerminatorThread interrupted:.");
+      e.printStackTrace();
       return;
     }
     System.err.println("Maximum time elapsed. Requesting stop for the workload.");
