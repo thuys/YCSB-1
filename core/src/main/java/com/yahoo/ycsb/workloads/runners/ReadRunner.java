@@ -92,7 +92,7 @@ public class ReadRunner implements Runnable {
 
 			if (readValueAsByteIterator != null) {
 				String temp = readValueAsByteIterator.toString().trim();
-				System.err.println("\t2\t" + temp);
+//				System.err.println("\t2\t" + temp);
 				long time = Long.parseLong(temp);
 
 				if (!readValue.checkKey(time)) {
@@ -102,7 +102,7 @@ public class ReadRunner implements Runnable {
 				readValue.setKey(time);
 
 				if (time == this.expectedValue) {
-					System.err.println("consistency reached!!!");
+//					System.err.println("consistency reached!!!");
 					
 					if(stopOnFirstConsistency){
 						// Remove
@@ -116,7 +116,7 @@ public class ReadRunner implements Runnable {
 				}
 
 				readValue.setReadKey(false);
-				System.err.println("\t null ");
+//				System.err.println("\t null ");
 			}
 		} catch (Throwable e) {
 			e.printStackTrace();
