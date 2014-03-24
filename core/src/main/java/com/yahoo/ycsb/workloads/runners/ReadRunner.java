@@ -62,14 +62,14 @@ public class ReadRunner implements Runnable {
 	public void run() {
 		try {
 			long start = System.nanoTime() / 1000;
-
+			long relativeStart = start- expectedValue;
 			//System.err.println("READING_THREAD: reading key : " + keyname
 			//		+ " for value: " + expectedValue + " at " + start);
 			
 			if(start > nextReadTime + maxDelayBeforeDropQuery){
 				System.err.println("\tDrop of query due of time");
 				oneMeasurement.addMeasurement(this.expectedValue,
-						this.type, start, null, null);
+						this.type, relativeStart, null, null);
 				this.taskToCancel.cancel(false);
 				return;
 			}
@@ -78,7 +78,7 @@ public class ReadRunner implements Runnable {
 				//System.err.println("\tTimeout of query ");
 				if(!readValue.checkKey(expectedValue)){
 					oneMeasurement.addMeasurement(this.expectedValue,
-							this.type, start, timeout, null);
+							this.type, relativeStart, timeout, null);
 				}
 				this.taskToCancel.cancel(false);
 				return;
@@ -97,7 +97,7 @@ public class ReadRunner implements Runnable {
 
 				//if (!readValue.checkKey(time)) {
 					this.oneMeasurement.addMeasurement(this.expectedValue,
-							this.type, start, delay, time);
+							this.type, relativeStart, delay, time);
 				//}
 				readValue.setKey(time);
 
@@ -112,7 +112,7 @@ public class ReadRunner implements Runnable {
 			} else {
 				//if (!readValue.hasReadValue() || readValue.hasReadKey()){
 					this.oneMeasurement.addMeasurement(this.expectedValue,
-							this.type, start, delay, null);
+							this.type, relativeStart, delay, null);
 				//}
 
 				readValue.setReadKey(false);

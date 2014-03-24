@@ -39,19 +39,20 @@ public abstract class WriterRunner implements Runnable {
 		try {
 			// /////////
 			long start = (System.nanoTime() / 1000);
+			long relativeStart = start- timeStamp;
 //			System.err.println("WRITER_THREAD: inserting values: "
 //					+ this.values + " for key: " + this.dbKey + " at "
 //					+ start);
 			if(start > timeStamp + maxDelayBeforeDropQuery){
 //				System.err.println("\tDrop of query out of time");
-				measurement.addMeasurement(timeStamp, getType(), start, null, null);
+				measurement.addMeasurement(timeStamp, getType(), relativeStart, null, null);
 				return;
 
 			}
 			// /////////
 			this.doRun();
 			long delay = (System.nanoTime() / 1000) - timeStamp;
-			measurement.addMeasurement(timeStamp, getType(), start, delay, timeStamp);
+			measurement.addMeasurement(timeStamp, getType(), relativeStart, delay, timeStamp);
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
