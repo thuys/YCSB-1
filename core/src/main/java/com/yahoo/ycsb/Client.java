@@ -750,7 +750,7 @@ public class Client {
 					opcount, measurements);
 			threads.add(writerThread);
 		}
-		if(props.getProperty(ADD_SEPARATE_WORKLOAD_PROPERTY) != null){
+		if(props.getProperty("consistencyTest") == null || props.getProperty(ADD_SEPARATE_WORKLOAD_PROPERTY) != null){
 			Class<?> workloadclass = classLoader.loadClass(props.getProperty(WORKLOAD_PROPERTY));
 			Workload workload = createWorkload(props, workloadclass);
 			// Thread id is hier niet belangrijk
