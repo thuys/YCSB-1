@@ -46,6 +46,19 @@ public class ConsistencyOneMeasurement {
 	}
 	
 	public Long getLastDelay(OperationType type, long time){
+		Pair<Long, Long, Long> last = null;
+		Stack<Pair<Long, Long, Long>> stack = measurementInsertMap.get(type).get(time);
+		for(int j = stack.size()-1; j >= 0; j++){
+			Pair<Long, Long, Long> current = stack.get(j);
+			if(last == null)
+				last = current;
+			else if(matchKeys(current, last)){
+				last = current;
+			}else{
+				return last.getY();
+			}
+		}
+
 		return measurementInsertMap.get(type).get(time).lastElement().getY();
 	}
 	
@@ -53,12 +66,36 @@ public class ConsistencyOneMeasurement {
 //		return new ArrayList<Long>(measurementInsertMap.get(type).get(time));
 //	}
 	
+	private boolean matchKeys(Pair<Long, Long, Long> current,
+			Pair<Long, Long, Long> last) {
+		if(last.getZ() == null){
+			return current.getZ() == null;
+		}
+		
+		return last.getZ().equals(current.getZ());
+	}
+
 	public int getNumberOfDelays(OperationType type, long time){
 		if(!measurementInsertMap.containsKey(type))
 			return 0;
 		if(!measurementInsertMap.get(type).containsKey(time))
 			return 0;
-		return measurementInsertMap.get(type).get(time).size();
+		
+		int number = 0;
+		Pair<Long, Long, Long> last = null;
+		Stack<Pair<Long, Long, Long>> stack = measurementInsertMap.get(type).get(time);
+		for(int j = stack.size()-1; j >= 0; j++){
+			Pair<Long, Long, Long> current = stack.get(j);
+			if(last == null){
+				number++;
+			}
+			else if(!matchKeys(current, last)){
+				number++;
+			}
+			last = current;
+		}
+
+		return number;
 	}
 
 	public Stack<Pair<Long, Long, Long>>  getAllValues(OperationType type, long time) {
@@ -66,6 +103,8 @@ public class ConsistencyOneMeasurement {
 			return new Stack<Pair<Long, Long, Long>>();
 		if(!measurementInsertMap.get(type).containsKey(time))
 			return new Stack<Pair<Long, Long, Long>>();
+		
+		
 		return measurementInsertMap.get(type).get(time);
 	}
 }

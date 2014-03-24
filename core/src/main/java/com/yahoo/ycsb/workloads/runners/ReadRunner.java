@@ -95,10 +95,10 @@ public class ReadRunner implements Runnable {
 //				System.err.println("\t2\t" + temp);
 				long time = Long.parseLong(temp);
 
-				if (!readValue.checkKey(time)) {
+				//if (!readValue.checkKey(time)) {
 					this.oneMeasurement.addMeasurement(this.expectedValue,
 							this.type, start, delay, time);
-				}
+				//}
 				readValue.setKey(time);
 
 				if (time == this.expectedValue) {
@@ -110,10 +110,10 @@ public class ReadRunner implements Runnable {
 					}
 				}
 			} else {
-				if (!readValue.hasReadValue() || readValue.hasReadKey()){
+				//if (!readValue.hasReadValue() || readValue.hasReadKey()){
 					this.oneMeasurement.addMeasurement(this.expectedValue,
 							this.type, start, delay, null);
-				}
+				//}
 
 				readValue.setReadKey(false);
 //				System.err.println("\t null ");
