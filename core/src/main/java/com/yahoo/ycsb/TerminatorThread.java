@@ -57,7 +57,7 @@ public class TerminatorThread extends Thread {
 	    try {
 	    	now = System.currentTimeMillis();
 	    	timeToSleep = startTime-now + maxExecutionTime*1000;
-	    	System.err.println("TEST: " +timeToSleep);
+	    	//System.err.println("TEST: " +timeToSleep);
 	    	if(timeToSleep>0)
 	    		Thread.sleep(timeToSleep);
 	    } catch (InterruptedException e) {
