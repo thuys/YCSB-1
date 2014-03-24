@@ -76,8 +76,8 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 						+ START_POINT_PROPERTY
 						+ "\" should be an integer number")*1000;
 		
-		System.err.println("FIRST NEXT TIMESTAMP: " + this.nextTimestamp);
-		System.err.println("CURRENT TIME: " + System.nanoTime()/1000);
+		//System.err.println("FIRST NEXT TIMESTAMP: " + this.nextTimestamp);
+		//System.err.println("CURRENT TIME: " + System.nanoTime()/1000);
 		
 		this.keyCounter = 0;
 
@@ -229,7 +229,7 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 		try {
 			executor.awaitTermination(2000, TimeUnit.MILLISECONDS);
 		} catch (InterruptedException e) {
-			System.err.println("Consistency workload not stopped");
+			//System.err.println("Consistency workload not stopped");
 		}
 	}
 	

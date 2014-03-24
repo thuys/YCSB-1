@@ -205,10 +205,10 @@ public class ConsistencyMeasurements {
 	}
 
 	public void export(Properties props) {
-		System.err.println("STARTING TO EXPORT");
+//		System.err.println("STARTING TO EXPORT");
 
 		if (props.getProperty(INSERT_MATRIX_DELAY_PROPERTY) != null) {
-			System.err.println("\tSTARTING TO EXPORT INSERT DELAY");
+//			System.err.println("\tSTARTING TO EXPORT INSERT DELAY");
 
 			try {
 				PrintWriter out = new PrintWriter(
@@ -218,11 +218,11 @@ public class ConsistencyMeasurements {
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			}
-			System.err.println("\tENDING EXPORT");
+//			System.err.println("\tENDING EXPORT");
 		}
 
 		if (props.getProperty(UPDATE_MATRIX_DELAY_PROPERTY) != null) {
-			System.err.println("\tSTARTING TO EXPORT UPDATE DELAY");
+//			System.err.println("\tSTARTING TO EXPORT UPDATE DELAY");
 
 			try {
 				PrintWriter out = new PrintWriter(
@@ -232,11 +232,11 @@ public class ConsistencyMeasurements {
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			}
-			System.err.println("\tENDING EXPORT");
+//			System.err.println("\tENDING EXPORT");
 		}
 
 		if (props.getProperty(INSERT_MATRIX_NB_OF_CHANGES_PROPERTY) != null) {
-			System.err.println("\tSTARTING TO EXPORT INSERT NB OF CHANGES");
+//			System.err.println("\tSTARTING TO EXPORT INSERT NB OF CHANGES");
 
 			try {
 				PrintWriter out = new PrintWriter(
@@ -246,11 +246,11 @@ public class ConsistencyMeasurements {
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			}
-			System.err.println("\tENDING EXPORT");
+//			System.err.println("\tENDING EXPORT");
 		}
 
 		if (props.getProperty(UPDATE_MATRIX_NB_OF_CHANGES_PROPERTY) != null) {
-			System.err.println("\tSTARTING TO EXPORT UPDATE NB OF CHANGES");
+//			System.err.println("\tSTARTING TO EXPORT UPDATE NB OF CHANGES");
 
 			try {
 				PrintWriter out = new PrintWriter(
@@ -260,11 +260,11 @@ public class ConsistencyMeasurements {
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			}
-			System.err.println("\tENDING EXPORT");
+//			System.err.println("\tENDING EXPORT");
 		}
 
 		if (props.getProperty(INSERT_MATRIX_RAW_PROPERTY) != null) {
-			System.err.println("\tSTARTING TO EXPORT INSERT RAW");
+//			System.err.println("\tSTARTING TO EXPORT INSERT RAW");
 
 			try {
 				PrintWriter out = new PrintWriter(
@@ -274,11 +274,11 @@ public class ConsistencyMeasurements {
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			}
-			System.err.println("\tENDING EXPORT");
+//			System.err.println("\tENDING EXPORT");
 		}
 
 		if (props.getProperty(UPDATE_MATRIX_RAW_PROPERTY) != null) {
-			System.err.println("\tSTARTING TO EXPORT UPDATE RAW");
+//			System.err.println("\tSTARTING TO EXPORT UPDATE RAW");
 
 			try {
 				PrintWriter out = new PrintWriter(
@@ -288,7 +288,7 @@ public class ConsistencyMeasurements {
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			}
-			System.err.println("\tENDING EXPORT");
+//			System.err.println("\tENDING EXPORT");
 		}
 
 	}

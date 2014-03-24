@@ -63,11 +63,11 @@ public class ReadRunner implements Runnable {
 		try {
 			long start = System.nanoTime() / 1000;
 
-			System.err.println("READING_THREAD: reading key : " + keyname
-					+ " for value: " + expectedValue + " at " + start);
+			//System.err.println("READING_THREAD: reading key : " + keyname
+			//		+ " for value: " + expectedValue + " at " + start);
 			
 			if(start > nextReadTime + maxDelayBeforeDropQuery){
-				System.err.println("\tDrop of query out of time");
+				System.err.println("\tDrop of query due of time");
 				oneMeasurement.addMeasurement(this.expectedValue,
 						this.type, start, null, null);
 				this.taskToCancel.cancel(false);
@@ -75,7 +75,7 @@ public class ReadRunner implements Runnable {
 			}
 			
 			if(start > expectedValue + timeout){
-				System.err.println("\tTimeout of query ");
+				//System.err.println("\tTimeout of query ");
 				if(!readValue.checkKey(expectedValue)){
 					oneMeasurement.addMeasurement(this.expectedValue,
 							this.type, start, timeout, null);
