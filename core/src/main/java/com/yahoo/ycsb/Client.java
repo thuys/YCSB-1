@@ -1,5 +1,5 @@
 /**                                                                                                                                                                                
- * Copyright (c) 2010 Yahoo! Inc. All rights reserved.                                                                                                                             
+q * Copyright (c) 2010 Yahoo! Inc. All rights reserved.                                                                                                                             
  *                                                                                                                                                                                 
  * Licensed under the Apache License, Version 2.0 (the "License"); you                                                                                                             
  * may not use this file except in compliance with the License. You                                                                                                                
@@ -22,14 +22,21 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Properties;
 import java.util.Vector;
 
 import com.yahoo.ycsb.event.YCSBEventController;
+import com.yahoo.ycsb.measurements.ConsistencyMeasurements;
+import com.yahoo.ycsb.measurements.ConsistencyOneMeasurement;
 import com.yahoo.ycsb.measurements.Measurements;
 import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
 import com.yahoo.ycsb.measurements.exporter.TextMeasurementsExporter;
+import com.yahoo.ycsb.workloads.ConsistencyTestWorkload;
+import com.yahoo.ycsb.workloads.ReaderWorkload;
+import com.yahoo.ycsb.workloads.WriterWorkload;
 
 //import org.apache.log4j.BasicConfigurator;
 
@@ -434,12 +441,13 @@ public class Client {
 		String dbname;
 		Properties props = new Properties();
 		Properties fileprops = new Properties();
+		ConsistencyMeasurements measurements = new ConsistencyMeasurements();
 		boolean dotransactions = true;
 		int threadcount = 1;
 		int target = 0;
 		boolean status = false;
 		String label = "";
-		
+		final String CONSISTENCY_TEST_PROPERTY = "consistencyTest";
 
 		// parse arguments
 		int argindex = 0;
@@ -571,6 +579,9 @@ public class Client {
 			System.exit(0);
 		}
 
+		if(props.getProperty(CONSISTENCY_TEST_PROPERTY) != null)
+			checkRequiredConsistencyTestParameters(props);
+		
 		long maxExecutionTime = Integer.parseInt(props.getProperty(
 				MAX_EXECUTION_TIME, "0"));
 
@@ -615,68 +626,25 @@ public class Client {
 		// set up measurements
 		Measurements.setProperties(props);
 
-		// load the workload
-		ClassLoader classLoader = Client.class.getClassLoader();
-
-		Workload workload = null;
-
-		try {
-			Class workloadclass = classLoader.loadClass(props
-					.getProperty(WORKLOAD_PROPERTY));
-
-			workload = (Workload) workloadclass.newInstance();
-		} catch (Exception e) {
-			e.printStackTrace();
-			e.printStackTrace(System.out);
-			System.exit(0);
-		}
-
-		try {
-			workload.init(props);
-		} catch (WorkloadException e) {
-			e.printStackTrace();
-			e.printStackTrace(System.out);
-			System.exit(0);
-		}
-
 		warningthread.interrupt();
 
 		// run the workload
 
 		System.err.println("Starting test.");
 
-		int opcount;
-		if (dotransactions) {
-			opcount = Integer.parseInt(props.getProperty(
-					OPERATION_COUNT_PROPERTY, "0"));
-		} else {
-			if (props.containsKey(INSERT_COUNT_PROPERTY)) {
-				opcount = Integer.parseInt(props.getProperty(
-						INSERT_COUNT_PROPERTY, "0"));
-			} else {
-				opcount = Integer.parseInt(props.getProperty(
-						RECORD_COUNT_PROPERTY, "0"));
-			}
+		
+		int opcount = calculateOpcount(fileprops, dotransactions);	
+		props.setProperty("synchronousClock", Long.toString(System.nanoTime()/1000));
+		////////////////////////////////////////////////////////////
+		Vector<Thread> threads = null;
+		try {
+			threads = createClientThreads(dbname, props,
+					dotransactions, threadcount, targetperthreadperms, opcount, measurements);
+		} catch (ClassNotFoundException e1) {
+			e1.printStackTrace();
+			System.exit(1);
 		}
-
-		Vector<Thread> threads = new Vector<Thread>();
-
-		for (int threadid = 0; threadid < threadcount; threadid++) {
-			DB db = null;
-			try {
-				db = DBFactory.newDB(dbname, props);
-			} catch (UnknownDBException e) {
-				System.out.println("Unknown DB " + dbname);
-				System.exit(0);
-			}
-
-			Thread t = new ClientThread(db, dotransactions, workload, threadid,
-					threadcount, props, opcount / threadcount,
-					targetperthreadperms);
-
-			threads.add(t);
-			// t.start();
-		}
+		////////////////////////////////////////////////////////////
 
 		StatusThread statusthread = null;
 
@@ -706,10 +674,10 @@ public class Client {
 			eventController.start();
 		}
 		Thread terminator = null;
-
+		
 		if (maxExecutionTime > 0) {
 			terminator = new TerminatorThread(maxExecutionTime, threads,
-					workload, eventController);
+					workloads, eventController);
 			terminator.start();
 		}
 
@@ -738,7 +706,7 @@ public class Client {
 		}
 
 		try {
-			workload.cleanup();
+			cleanupWorkloads();
 		} catch (WorkloadException e) {
 			e.printStackTrace();
 			e.printStackTrace(System.out);
@@ -753,7 +721,198 @@ public class Client {
 			e.printStackTrace();
 			System.exit(-1);
 		}
+		measurements.export(props);
 
 		System.exit(0);
+	}
+	
+	private static void cleanupWorkloads() throws WorkloadException{
+		for(Workload currentWorkload : workloads){
+			currentWorkload.cleanup();
+		}
+	}
+	
+	private static final List<Workload> workloads = new ArrayList<Workload>();
+	private static final String READ_PROPORTION_CONSISTENCY_CHECK_PROPERTY = "readProportionConsistencyCheck";
+	private static final String UPDATE_PROPORTION_CONSISNTECY_CHECK_PROPERTY = "updateProportionConsistencyCheck";
+	private static final String ADD_SEPARATE_WORKLOAD_PROPERTY = "addSeparateWorkload";
+	
+	private static Vector<Thread> createClientThreads(String dbname,
+			Properties props, boolean dotransactions, int threadcount,
+			double targetperthreadperms, int opcount, ConsistencyMeasurements measurements) throws ClassNotFoundException {
+		ClassLoader classLoader = Client.class.getClassLoader();
+		Vector<Thread> threads = new Vector<Thread>();
+		if(props.getProperty("consistencyTest") != null){
+			Properties propsConsistencyCheck = addConsistencyCheckOperationDistribution(props);
+			Thread writerThread = createWriterThreads(dbname, propsConsistencyCheck,
+					dotransactions, opcount, measurements);
+			threads = createReaderThread(dbname, propsConsistencyCheck, dotransactions,
+					opcount, measurements);
+			threads.add(writerThread);
+		}
+		if(props.getProperty("consistencyTest") == null || props.getProperty(ADD_SEPARATE_WORKLOAD_PROPERTY) != null){
+			Class<?> workloadclass = classLoader.loadClass(props.getProperty(WORKLOAD_PROPERTY));
+			Workload workload = createWorkload(props, workloadclass);
+			// Thread id is hier niet belangrijk
+			threads.addAll(createAmountOfThreads(dbname, props, dotransactions, threadcount, 
+											targetperthreadperms, workload, opcount, true, 0));
+		}
+		return threads;
+	}
+
+	private static Vector<Thread> createReaderThread(String dbname,
+			Properties props, boolean dotransactions, int opcount,
+			ConsistencyMeasurements measurements) {
+		int amountOfReadThreads = getAmountOfReadThreads(props);
+		List<Workload> readerWorkloads = getReaderWorkloads(props, amountOfReadThreads, measurements);
+		return createAmountOfThreads(dbname, props, dotransactions, amountOfReadThreads, getTargetToConsistencyWorkload(props), 
+														readerWorkloads, opcount, false, 1);
+	}
+
+	private static Thread createWriterThreads(String dbname, Properties props,
+			boolean dotransactions, int opcount,
+			ConsistencyMeasurements measurements) {
+		Class<?> writerWorkloadclass = WriterWorkload.class;
+		ConsistencyTestWorkload writerWorkload = (ConsistencyTestWorkload) createWorkload(props, writerWorkloadclass);
+		writerWorkload.setOneMeasurement(measurements.getNewWriteConsistencyOneMeasurement());
+		return createClientThread(dbname, props, dotransactions, 1, getTargetToConsistencyWorkload(props), 
+				writerWorkload, opcount, 0, false);
+	}
+
+	private static Properties addConsistencyCheckOperationDistribution(Properties props){
+		Properties newProps = (Properties) props.clone();
+		String updateProportionAsString = props.getProperty(UPDATE_PROPORTION_CONSISNTECY_CHECK_PROPERTY);
+		String insertProportionAsString = props.getProperty(READ_PROPORTION_CONSISTENCY_CHECK_PROPERTY);
+		if(!areValidOperationDistributions(updateProportionAsString, insertProportionAsString))
+			throw new IllegalArgumentException("Operation distributions do not sum to one");
+		newProps.setProperty("updateproportion", updateProportionAsString);
+		newProps.setProperty("insertproportion", insertProportionAsString);
+		newProps.setProperty("readproportion", "0");
+		newProps.setProperty("scanproportion", "0");
+		newProps.setProperty("readmodifywriteproportion", "0");
+		return newProps;
+	}
+	
+	private static boolean areValidOperationDistributions(String updateChanceAsString, String insertChanceAsString){
+		float updateChance = Float.parseFloat(updateChanceAsString);
+		float insetChance = Float.parseFloat(insertChanceAsString);
+		return (updateChance+insetChance == 1);
+	}
+	
+	private static int getAmountOfReadThreads(Properties props){
+		String readThreads = props.getProperty("readThreads");
+		try{
+			return Integer.parseInt(readThreads);
+		} catch(NumberFormatException exc){
+			throw new RuntimeException("Parameter \"readThreads\" should be an integer value");
+		}
+	}
+
+	private static double getTargetToConsistencyWorkload(Properties newProp) {
+		System.err.println("REQUEST_PERIOD: " + newProp.getProperty(ConsistencyTestWorkload.NEW_REQUEST_PERIOD_PROPERTY));
+		double dummy = Long.parseLong(newProp.getProperty(ConsistencyTestWorkload.NEW_REQUEST_PERIOD_PROPERTY));
+		return (1/dummy)*1.1;
+	}
+	
+	private static List<Workload> getReaderWorkloads(Properties prop, int amount, ConsistencyMeasurements measurements){
+		List<Workload> result = new ArrayList<Workload>();
+		Class<?> workloadclass = ReaderWorkload.class;
+		for(int i=0; i<amount; i++){
+			//TODO: resetten van target
+			ReaderWorkload workload = (ReaderWorkload) createWorkload(prop, workloadclass);
+			// Schedule first read thread one microsecond after write thread
+			long delayToWriterThread = ((workload.getNewRequestPriodInMicros()/amount)*i)+1;
+			result.add(workload);
+			ConsistencyOneMeasurement measurement = measurements.getNewReadConsistencyOneMeasurement();
+			workload.setOneMeasurement(measurement);
+			workload.setDelayBetweenReadThreads(delayToWriterThread);
+		}
+		return result;
+	}
+	
+	private static Workload createWorkload(Properties props, Class<?> workloadclass) {
+		Workload workload = null;
+		try {
+			workload = (Workload) workloadclass.newInstance();
+		} catch (Exception e) {
+			e.printStackTrace();
+			e.printStackTrace(System.out);
+			System.exit(0);
+		}
+		initializeWorkload(props, workload);
+		workloads.add(workload);
+		return workload;
+	}
+
+	private static void initializeWorkload(Properties props, Workload workload) {
+		try {
+			workload.init(props);
+		} catch (WorkloadException e) {
+			e.printStackTrace();
+			e.printStackTrace(System.out);
+			System.exit(0);
+		}
+	}
+
+	private static int calculateOpcount(Properties props, boolean dotransactions) {
+		if (dotransactions) {
+			return Integer.parseInt(props.getProperty(OPERATION_COUNT_PROPERTY,
+					"0"));
+		} else {
+			if (props.containsKey(INSERT_COUNT_PROPERTY)) {
+				return Integer.parseInt(props.getProperty(
+						INSERT_COUNT_PROPERTY, "0"));
+			} else {
+				return Integer.parseInt(props.getProperty(
+						RECORD_COUNT_PROPERTY, "0"));
+			}
+		}
+	}
+
+	private static Vector<Thread> createAmountOfThreads(String dbname, Properties props,
+			boolean dotransactions, int threadcount, double targetperthreadperms, List<Workload> workloads, 
+			int opcount, boolean splitOperationOverThreads, int startThreadIdsAt){
+		Vector<Thread> result = new Vector<Thread>();
+		for(int i=0; i<threadcount; i++){
+			Thread newThread = createClientThread(dbname, props, dotransactions, threadcount, 
+					targetperthreadperms, workloads.get(i), opcount, startThreadIdsAt + i, splitOperationOverThreads);
+			result.add(newThread);
+		}
+		return result;
+	}
+	
+	private static Vector<Thread> createAmountOfThreads(String dbname, Properties props,
+			boolean dotransactions, int threadcount, double targetperthreadperms, Workload workload, 
+			int opcount, boolean splitOperationOverThreads, int startThreadIdsAt){
+		Vector<Thread> result = new Vector<Thread>();
+		for(int i=0; i<threadcount; i++){
+			Thread newThread = createClientThread(dbname, props, dotransactions, threadcount, 
+						targetperthreadperms, workload, opcount, startThreadIdsAt + i, splitOperationOverThreads);
+			result.add(newThread);
+		}
+		return result;
+	}
+	
+	private static Thread createClientThread(String dbname, Properties props,
+			boolean dotransactions, int threadcount,
+			double targetperthreadperms, Workload workload, int opcount,
+			int threadid, boolean splitOperationOverThreads) {
+		DB db = null;
+		try {
+			db = DBFactory.newDB(dbname, props);
+		} catch (UnknownDBException e) {
+			System.out.println("Unknown DB " + dbname);
+			System.exit(0);
+		}
+		// For a consistency test, every thread executes
+		// the same operations
+		opcount = splitOperationOverThreads ? (opcount / threadcount) : opcount;
+		return new ClientThread(db, dotransactions, workload, threadid,
+				threadcount, props, opcount, targetperthreadperms);
+	}
+	
+	private static void checkRequiredConsistencyTestParameters(Properties prop){
+		if(prop.getProperty("readThreads") == null)
+			throw new RuntimeException("missing property \"readThreads\" for consistency test");
 	}
 }
