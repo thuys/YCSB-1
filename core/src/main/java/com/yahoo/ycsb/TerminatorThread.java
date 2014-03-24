@@ -50,13 +50,21 @@ public class TerminatorThread extends Thread {
   }
   
   public void run() {
-    try {
-      Thread.sleep(maxExecutionTime * 1000);
-    } catch (InterruptedException e) {
-      System.err.println("Could not wait until max specified time, TerminatorThread interrupted:.");
-      e.printStackTrace();
-      return;
-    }
+	long startTime = System.currentTimeMillis();
+	long now = System.currentTimeMillis();
+	long timeToSleep = startTime-now + maxExecutionTime*1000;
+	while(timeToSleep>0){
+	    try {
+	    	now = System.currentTimeMillis();
+	    	timeToSleep = startTime-now + maxExecutionTime*1000;
+	    	if(timeToSleep>0)
+	    		Thread.sleep(timeToSleep);
+	    } catch (InterruptedException e) {
+	      System.err.println("Could not wait until max specified time, TerminatorThread interrupted:.");
+	      e.printStackTrace();
+	      
+	    }
+	}
     System.err.println("Maximum time elapsed. Requesting stop for the workload.");
     this.requestStopForWorkloads();
     if(eventController != null){
