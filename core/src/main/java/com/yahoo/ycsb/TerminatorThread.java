@@ -80,6 +80,7 @@ public class TerminatorThread extends Thread {
             System.err.println("Still waiting for thread " + t.getName() + " to complete.");
           }
         } catch (InterruptedException e) {
+            System.err.println("Interrupted while waiting for thread " + t.getName() + " to complete.");
           // Do nothing. Don't know why I was interrupted.
         }
       }
