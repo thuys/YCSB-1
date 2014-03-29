@@ -25,6 +25,7 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoOptions;
+import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 import com.yahoo.ycsb.ByteArrayByteIterator;
@@ -61,7 +62,7 @@ public class MongoDbClient extends DB {
 	 * {@link #cleanup()}.
 	 */
 	private static final AtomicInteger initCount = new AtomicInteger(0);
-	
+
 	private int number;
 
 	/**
@@ -73,7 +74,7 @@ public class MongoDbClient extends DB {
 		synchronized (INCLUDE) {
 			number = initCount.get();
 			initCount.incrementAndGet();
-			
+
 			if (mongos != null) {
 				return;
 			}
@@ -85,6 +86,8 @@ public class MongoDbClient extends DB {
 			database = props.getProperty("mongodb.database", "ycsb");
 			String writeConcernType = props.getProperty("mongodb.writeConcern",
 					"safe").toLowerCase();
+			String readPreferenceS = props.getProperty(
+					"mongodb.readPreference", "primary").toLowerCase();
 			final String maxConnections = props.getProperty(
 					"mongodb.maxconnections", "10");
 
@@ -98,6 +101,8 @@ public class MongoDbClient extends DB {
 				writeConcern = WriteConcern.FSYNC_SAFE;
 			} else if ("replicas_safe".equals(writeConcernType)) {
 				writeConcern = WriteConcern.REPLICAS_SAFE;
+			} else if ("majority".equals(writeConcernType)) {
+				writeConcern = WriteConcern.MAJORITY;
 			} else {
 				System.err
 						.println("ERROR: Invalid writeConcern: '"
@@ -106,6 +111,36 @@ public class MongoDbClient extends DB {
 								+ "Must be [ none | safe | normal | fsync_safe | replicas_safe ]");
 				System.exit(1);
 			}
+			ReadPreference readPreference = null;
+			
+			switch (readPreferenceS) {
+			case "nearest":
+				readPreference = ReadPreference.nearest();
+				break;
+			case "primary":
+				readPreference = ReadPreference.primary();
+				break;
+			case "primarypreferred":
+				readPreference = ReadPreference.primaryPreferred();
+				break;
+			case "secondary":
+				readPreference = ReadPreference.secondary();
+				break;
+			case "secondarypreferred":
+				readPreference = ReadPreference.secondaryPreferred();
+				break;
+			default:
+				System.err
+						.println("ERROR: Invalid readPreference: '"
+								+ readPreferenceS
+								+ "'. "
+								+ "Must be [ nearest | primary | primaryPreferred | secondary | secondaryPreferred ]");
+				System.exit(1);
+			}
+			MongoOptions options = new MongoOptions();
+			options.connectionsPerHost = Integer.parseInt(maxConnections);
+			options.readPreference = readPreference;
+			
 
 			String[] urls = url.split(",");
 			for (String singleURL : urls) {
@@ -122,9 +157,8 @@ public class MongoDbClient extends DB {
 					// need to append db to url.
 					singleURL += "/" + database;
 					System.out.println("new database url = " + singleURL);
-					MongoOptions options = new MongoOptions();
-					options.connectionsPerHost = Integer
-							.parseInt(maxConnections);
+
+					// options.readPreference =new Read
 					Mongo mongo = new Mongo(new DBAddress(singleURL), options);
 					mongos.add(mongo);
 					System.out.println("mongo connection created with "
@@ -133,7 +167,7 @@ public class MongoDbClient extends DB {
 					System.err
 							.println("Could not initialize MongoDB connection pool for Loader: "
 									+ e1.toString());
-					//e1.printStackTrace();
+					// e1.printStackTrace();
 				}
 			}
 
@@ -147,13 +181,14 @@ public class MongoDbClient extends DB {
 	@Override
 	public void cleanup() throws DBException {
 		synchronized (INCLUDE) {
-			for (Mongo mongo: mongos) {
-				
+			for (Mongo mongo : mongos) {
+
 				try {
 					mongo.close();
 				} catch (Exception e1) {
-					System.err.println("Could not close MongoDB connection pool: "
-							+ e1.toString());
+					System.err
+							.println("Could not close MongoDB connection pool: "
+									+ e1.toString());
 					e1.printStackTrace();
 					return;
 				}
@@ -161,10 +196,10 @@ public class MongoDbClient extends DB {
 		}
 	}
 
-	public Mongo getDb(){
-		return mongos.get(number%mongos.size());
+	public Mongo getDb() {
+		return mongos.get(number % mongos.size());
 	}
-	
+
 	/**
 	 * Delete a record from the database.
 	 * 
