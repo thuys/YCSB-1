@@ -32,6 +32,7 @@ import com.yahoo.ycsb.ByteArrayByteIterator;
 import com.yahoo.ycsb.ByteIterator;
 import com.yahoo.ycsb.DB;
 import com.yahoo.ycsb.DBException;
+import com.yahoo.ycsb.StringByteIterator;
 
 /**
  * MongoDB client for YCSB framework.
@@ -304,10 +305,21 @@ public class MongoDbClient extends DB {
 			}
 
 			if (queryResult != null) {
-				result.putAll(queryResult.toMap());
+				for(String field: queryResult.keySet()){
+					Object o = queryResult.get(field);
+					if(o instanceof String){
+						result.put(field, new StringByteIterator((String)o));
+					}else{
+						String value = new String((byte[])(queryResult.get(field)));
+						//System.out.println(field + " " + value);
+						result.put(field, new StringByteIterator(value));
+					}
+					
+				}
 			}
 			return queryResult != null ? 0 : 1;
 		} catch (Exception e) {
+			e.printStackTrace();
 			System.err.println(e.toString());
 			return 1;
 		} finally {

@@ -128,6 +128,7 @@ public class ReadRunner implements Runnable {
 		HashMap<String, ByteIterator> readResult = new HashMap<String, ByteIterator>();
 		String tableName = this.workload.getTableName();
 		this.db.read(tableName, this.keyname, this.fields, readResult);
+		
 		ByteIterator readValueAsByteIterator = readResult.get(this.workload
 				.getFieldWithTimestamp());
 		return readValueAsByteIterator;
