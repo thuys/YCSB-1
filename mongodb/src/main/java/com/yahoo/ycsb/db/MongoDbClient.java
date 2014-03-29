@@ -113,23 +113,17 @@ public class MongoDbClient extends DB {
 			}
 			ReadPreference readPreference = null;
 			
-			switch (readPreferenceS) {
-			case "nearest":
+			if (readPreferenceS.equals("nearest")) {
 				readPreference = ReadPreference.nearest();
-				break;
-			case "primary":
+			}else if (readPreferenceS.equals("primary")) {
 				readPreference = ReadPreference.primary();
-				break;
-			case "primarypreferred":
+			}else if (readPreferenceS.equals("primarypreferred")) {
 				readPreference = ReadPreference.primaryPreferred();
-				break;
-			case "secondary":
+			}else if (readPreferenceS.equals("secondary")) {
 				readPreference = ReadPreference.secondary();
-				break;
-			case "secondarypreferred":
+			}else if (readPreferenceS.equals("secondarypreferred")) {
 				readPreference = ReadPreference.secondaryPreferred();
-				break;
-			default:
+			}else{
 				System.err
 						.println("ERROR: Invalid readPreference: '"
 								+ readPreferenceS
