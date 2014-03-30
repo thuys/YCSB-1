@@ -36,7 +36,8 @@ public class ReadRunner implements Runnable {
 			long maxDelayBeforeDropQuery,
 			long period,
 			long timeout, 
-			boolean stopOnFirstConsistency) {
+			boolean stopOnFirstConsistency,
+			long startTime) {
 		super();
 		this.identifier = identifier;
 		this.expectedValue = expectedValue;
@@ -48,7 +49,7 @@ public class ReadRunner implements Runnable {
 		this.type = type;
 		this.readValue = new LastReadValue();
 		this.maxDelayBeforeDropQuery = maxDelayBeforeDropQuery;
-		this.nextReadTime = expectedValue;
+		this.nextReadTime = startTime;
 		this.period = period;
 		this.timeout = timeout;
 		this.stopOnFirstConsistency = stopOnFirstConsistency;

@@ -45,11 +45,11 @@ public class ReaderWorkload extends ConsistencyTestWorkload{
 		
 		long initialDelay = this.nextTimestamp - (currentTiming / 1000) + this.getDelayBetweenReadTheadsInMicros();
 		long expectedValue = this.nextTimestamp;
-		
+		long startTime = expectedValue + this.getDelayBetweenReadTheadsInMicros();
 		//System.err.println("Planning read at " + (System.nanoTime() / 1000) + " for " + initialDelay);
 		
 		ReadRunner readrunner = new ReadRunner(type, currentTiming, expectedValue, keyname,
-											fields, db, this, this.oneMeasurement, getMaxDelayBeforeDrop(), delayBetweenConsistencyChecks, getTimeOut(), isStopOnFirstConsistency());
+											fields, db, this, this.oneMeasurement, getMaxDelayBeforeDrop(), delayBetweenConsistencyChecks, getTimeOut(), isStopOnFirstConsistency(), startTime);
 		ScheduledFuture<?> taskToCancel = executor.scheduleWithFixedDelay(
 				readrunner, initialDelay, delayBetweenConsistencyChecks,
 				TimeUnit.MICROSECONDS);
