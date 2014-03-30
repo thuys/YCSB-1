@@ -277,7 +277,14 @@ public class HBaseClient extends com.yahoo.ycsb.DB
         }
 
         finally {
-            scanner.close();
+        	try{
+        		scanner.close();
+        	}catch(Exception e){
+        		{
+                    System.out.println("Error in getting/parsing scan result: "+e);
+                }
+                return ServerError;
+        	}
         }
 
         return Ok;
