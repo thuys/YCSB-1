@@ -152,7 +152,7 @@ public class MongoDbClient extends DB {
 				// options.readPreference =new Read
 				mongo = new Mongo(new DBAddress(singleURL), options);
 				System.out
-						.println("mongo connection created with " + singleURL);
+						.println("mongo connection created with " + singleURL +" parameters: R-" + readPreference + ", W" + writeConcern);
 			} catch (Exception e1) {
 				System.err
 						.println("Could not initialize MongoDB connection pool for Loader: "
