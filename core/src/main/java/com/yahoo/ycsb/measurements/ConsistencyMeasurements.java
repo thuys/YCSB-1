@@ -148,19 +148,20 @@ public class ConsistencyMeasurements {
 	}
 
 	private String exportRawData(OperationType type) {
-		String output = "Time(micros)" + SEPERATOR + "Thread" + SEPERATOR
+		System.err.println("Start export: " + System.currentTimeMillis());
+		StringBuilder builder = new StringBuilder();
+		builder.append("Time(micros)" + SEPERATOR + "Thread" + SEPERATOR
 				+ " Start(micros)" + SEPERATOR + "Delay (micros)" + SEPERATOR
-				+ "Value\n";
-
+				+ "Value\n");
 		for (Long time : getAllTimings(type)) {
 			for (ConsistencyOneMeasurement measurement : allWriteMeasurements) {
 				if (measurement.hasDelay(type, time)) {
 					for (Pair<Long, Long, Long> keys : measurement
 							.getAllValues(type, time)) {
-						output += time + SEPERATOR + "W-"
+						builder.append(time + SEPERATOR + "W-"
 								+ measurement.getThreadNumber() + SEPERATOR
 								+ keys.getX() + SEPERATOR + keys.getY()
-								+ SEPERATOR + keys.getZ() + "\n";
+								+ SEPERATOR + keys.getZ() + "\n");
 
 					}
 				}
@@ -170,18 +171,19 @@ public class ConsistencyMeasurements {
 				if (measurement.hasDelay(type, time)) {
 					for (Pair<Long, Long, Long> keys : measurement
 							.getAllValues(type, time)) {
-						output += time + SEPERATOR + "R-"
+						builder.append(time + SEPERATOR + "R-"
 								+ measurement.getThreadNumber() + SEPERATOR
 								+ keys.getX() + SEPERATOR + keys.getY()
-								+ SEPERATOR + keys.getZ() + "\n";
+								+ SEPERATOR + keys.getZ() + "\n");
 
 					}
 				}
 			}
 
 		}
+		System.err.println("Export export: " + System.currentTimeMillis());
 
-		return output;
+		return builder.toString();
 	}
 
 	public ConsistencyOneMeasurement getNewReadConsistencyOneMeasurement() {
