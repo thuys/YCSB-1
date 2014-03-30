@@ -50,7 +50,7 @@ public class MongoDbClient extends DB {
 	protected static final Integer INCLUDE = Integer.valueOf(1);
 
 	/** A singleton Mongo instance. */
-	private static ArrayList<Mongo> mongos;
+	private static Mongo mongo;
 
 	/** The default write concern for the test. */
 	private static WriteConcern writeConcern;
@@ -76,10 +76,6 @@ public class MongoDbClient extends DB {
 			number = initCount.get();
 			initCount.incrementAndGet();
 
-			if (mongos != null) {
-				return;
-			}
-			mongos = new ArrayList<Mongo>();
 			// initialize MongoDb driver
 			Properties props = getProperties();
 			String url = props.getProperty("mongodb.url",
@@ -113,18 +109,18 @@ public class MongoDbClient extends DB {
 				System.exit(1);
 			}
 			ReadPreference readPreference = null;
-			
+
 			if ("nearest".equals(readPreferenceS)) {
 				readPreference = ReadPreference.nearest();
-			}else if ("primary".equals(readPreferenceS)) {
+			} else if ("primary".equals(readPreferenceS)) {
 				readPreference = ReadPreference.primary();
-			}else if ("primarypreferred".equals(readPreferenceS)) {
+			} else if ("primarypreferred".equals(readPreferenceS)) {
 				readPreference = ReadPreference.primaryPreferred();
-			}else if ("secondary".equals(readPreferenceS)) {
+			} else if ("secondary".equals(readPreferenceS)) {
 				readPreference = ReadPreference.secondary();
-			}else if ("secondarypreferred".equals(readPreferenceS)) {
+			} else if ("secondarypreferred".equals(readPreferenceS)) {
 				readPreference = ReadPreference.secondaryPreferred();
-			}else{
+			} else {
 				System.err
 						.println("ERROR: Invalid readPreference: '"
 								+ readPreferenceS
@@ -135,35 +131,33 @@ public class MongoDbClient extends DB {
 			MongoOptions options = new MongoOptions();
 			options.connectionsPerHost = Integer.parseInt(maxConnections);
 			options.readPreference = readPreference;
-			
 
 			String[] urls = url.split(",");
-			for (String singleURL : urls) {
-				try {
-					singleURL = singleURL.trim();
-					// strip out prefix since Java driver doesn't currently
-					// support
-					// standard connection format URL yet
-					// http://www.mongodb.org/display/DOCS/Connections
-					if (singleURL.startsWith("mongodb://")) {
-						singleURL = singleURL.substring(10);
-					}
+			String singleURL = urls[number % urls.length];
 
-					// need to append db to url.
-					singleURL += "/" + database;
-					System.out.println("new database url = " + singleURL);
-
-					// options.readPreference =new Read
-					Mongo mongo = new Mongo(new DBAddress(singleURL), options);
-					mongos.add(mongo);
-					System.out.println("mongo connection created with "
-							+ singleURL);
-				} catch (Exception e1) {
-					System.err
-							.println("Could not initialize MongoDB connection pool for Loader: "
-									+ e1.toString());
-					// e1.printStackTrace();
+			try {
+				singleURL = singleURL.trim();
+				// strip out prefix since Java driver doesn't currently
+				// support
+				// standard connection format URL yet
+				// http://www.mongodb.org/display/DOCS/Connections
+				if (singleURL.startsWith("mongodb://")) {
+					singleURL = singleURL.substring(10);
 				}
+
+				// need to append db to url.
+				singleURL += "/" + database;
+				System.out.println("new database url = " + singleURL);
+
+				// options.readPreference =new Read
+				mongo = new Mongo(new DBAddress(singleURL), options);
+				System.out
+						.println("mongo connection created with " + singleURL);
+			} catch (Exception e1) {
+				System.err
+						.println("Could not initialize MongoDB connection pool for Loader: "
+								+ e1.toString());
+				// e1.printStackTrace();
 			}
 
 		}
@@ -176,23 +170,19 @@ public class MongoDbClient extends DB {
 	@Override
 	public void cleanup() throws DBException {
 		synchronized (INCLUDE) {
-			for (Mongo mongo : mongos) {
-
-				try {
-					mongo.close();
-				} catch (Exception e1) {
-					System.err
-							.println("Could not close MongoDB connection pool: "
-									+ e1.toString());
-					e1.printStackTrace();
-					return;
-				}
+			try {
+				mongo.close();
+			} catch (Exception e1) {
+				System.err.println("Could not close MongoDB connection pool: "
+						+ e1.toString());
+				e1.printStackTrace();
+				return;
 			}
 		}
 	}
 
 	public Mongo getDb() {
-		return mongos.get(number % mongos.size());
+		return mongo;
 	}
 
 	/**
@@ -305,16 +295,17 @@ public class MongoDbClient extends DB {
 			}
 
 			if (queryResult != null) {
-				for(String field: queryResult.keySet()){
+				for (String field : queryResult.keySet()) {
 					Object o = queryResult.get(field);
-					if(o instanceof String){
-						result.put(field, new StringByteIterator((String)o));
-					}else{
-						String value = new String((byte[])(queryResult.get(field)));
-						//System.out.println(field + " " + value);
+					if (o instanceof String) {
+						result.put(field, new StringByteIterator((String) o));
+					} else {
+						String value = new String(
+								(byte[]) (queryResult.get(field)));
+						// System.out.println(field + " " + value);
 						result.put(field, new StringByteIterator(value));
 					}
-					
+
 				}
 			}
 			return queryResult != null ? 0 : 1;
