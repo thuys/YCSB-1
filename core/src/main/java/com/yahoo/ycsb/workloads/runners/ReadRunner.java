@@ -97,7 +97,7 @@ public class ReadRunner implements Runnable {
 
 				//if (!readValue.checkKey(time)) {
 					this.oneMeasurement.addMeasurement(this.expectedValue,
-							this.type, relativeStart, delay, time);
+							this.type, relativeStart, Math.min(delay, nextReadTime+maxDelayBeforeDropQuery), time);
 				//}
 				readValue.setKey(time);
 
@@ -112,7 +112,7 @@ public class ReadRunner implements Runnable {
 			} else {
 				//if (!readValue.hasReadValue() || readValue.hasReadKey()){
 					this.oneMeasurement.addMeasurement(this.expectedValue,
-							this.type, relativeStart, delay, null);
+							this.type, relativeStart, Math.min(delay, nextReadTime+maxDelayBeforeDropQuery), null);
 				//}
 
 				readValue.setReadKey(false);
