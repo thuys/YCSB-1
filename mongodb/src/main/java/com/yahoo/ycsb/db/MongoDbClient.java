@@ -50,13 +50,13 @@ public class MongoDbClient extends DB {
 	protected static final Integer INCLUDE = Integer.valueOf(1);
 
 	/** A singleton Mongo instance. */
-	private static Mongo mongo;
+	private Mongo mongo;
 
 	/** The default write concern for the test. */
-	private static WriteConcern writeConcern;
+	private WriteConcern writeConcern;
 
 	/** The database to access. */
-	private static String database;
+	private String database;
 
 	/**
 	 * Count the number of times initialized to teardown on the last
