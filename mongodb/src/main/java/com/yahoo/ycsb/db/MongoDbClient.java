@@ -9,6 +9,7 @@
 
 package com.yahoo.ycsb.db;
 
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -26,6 +27,7 @@ import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoOptions;
 import com.mongodb.ReadPreference;
+import com.mongodb.ServerAddress;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 import com.yahoo.ycsb.ByteArrayByteIterator;
@@ -85,6 +87,8 @@ public class MongoDbClient extends DB {
 					"safe").toLowerCase();
 			String readPreferenceS = props.getProperty(
 					"mongodb.readPreference", "primary").toLowerCase();
+			String connectionPref = props.getProperty(
+					"mongodb.connections", "one").toLowerCase();
 			final String maxConnections = props.getProperty(
 					"mongodb.maxconnections", "10");
 
@@ -133,26 +137,35 @@ public class MongoDbClient extends DB {
 			options.readPreference = readPreference;
 
 			String[] urls = url.split(",");
-			String singleURL = urls[number % urls.length];
+			ArrayList<ServerAddress> servers = new ArrayList<ServerAddress>();
+			
+			try {
+				if(connectionPref.equals("one")){
+					String singleUrl = urls[number % urls.length];
+					
+					servers.add(convertToServerAddress(singleUrl));
+					
+				}else if(connectionPref.equals("all")){
+					for(String singleUrl: urls){
+						servers.add(convertToServerAddress(singleUrl));
+					}
+				}else{
+					System.err
+					.println("ERROR: Invalid mongodb.connections: '"
+							+ connectionPref
+							+ "'. "
+							+ "Must be [ all | one ]");
+					System.exit(1);
+				}
+			} catch (UnknownHostException e) {
+				System.err
+				.println("Could not initialize MongoDB connection pool for Loader: "
+						+ e.toString());
+			}
 
 			try {
-				singleURL = singleURL.trim();
-				// strip out prefix since Java driver doesn't currently
-				// support
-				// standard connection format URL yet
-				// http://www.mongodb.org/display/DOCS/Connections
-				if (singleURL.startsWith("mongodb://")) {
-					singleURL = singleURL.substring(10);
-				}
-
-				// need to append db to url.
-				singleURL += "/" + database;
-				System.out.println("new database url = " + singleURL);
-
-				// options.readPreference =new Read
-				mongo = new Mongo(new DBAddress(singleURL), options);
-				System.out
-						.println("mongo connection created with " + singleURL +" parameters: R-" + readPreference + ", W" + writeConcern);
+								// options.readPreference =new Read
+				mongo = new Mongo(servers, options);
 			} catch (Exception e1) {
 				System.err
 						.println("Could not initialize MongoDB connection pool for Loader: "
@@ -162,7 +175,22 @@ public class MongoDbClient extends DB {
 
 		}
 	}
+	private ServerAddress convertToServerAddress(String text) throws UnknownHostException{
+		String singleURL = text.trim();
+		// strip out prefix since Java driver doesn't currently
+		// support
+		// standard connection format URL yet
+		// http://www.mongodb.org/display/DOCS/Connections
+		if (singleURL.startsWith("mongodb://")) {
+			singleURL = singleURL.substring(10);
+		}
 
+		// need to append db to url.
+		singleURL += "/" + database;
+		System.out.println("new database url = " + singleURL);
+		
+		return new DBAddress(singleURL);
+	}
 	/**
 	 * Cleanup any state for this DB. Called once per DB instance; there is one
 	 * DB instance per client thread.
@@ -270,7 +298,6 @@ public class MongoDbClient extends DB {
 	 * @return Zero on success, a non-zero error code on error or "not found".
 	 */
 	@Override
-	@SuppressWarnings("unchecked")
 	public int read(String table, String key, Set<String> fields,
 			HashMap<String, ByteIterator> result) {
 		com.mongodb.DB db = null;
