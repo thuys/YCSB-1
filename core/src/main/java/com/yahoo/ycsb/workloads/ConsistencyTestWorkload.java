@@ -96,7 +96,7 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 		
 		this.maxDelayBeforeDropQuery = this.convertToLong(
 				p.getProperty(MAX_DELAY_BEFORE_DROP, MAX_DELAY_BEFORE_DROP_DEFAULT), "Property \""
-						+ NEW_REQUEST_PERIOD_PROPERTY
+						+ MAX_DELAY_BEFORE_DROP
 						+ "\" should be an long number");
 		this.stopOnFirstConsistency = this.convertToBoolean(
 				p.getProperty(STOP_ON_FIRST_CONSISTENCY, STOP_ON_FIRST_CONSISTENCY_DEFAULT), "Property \""
@@ -106,6 +106,10 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 				p.getProperty(TIMEOUT_BEFORE_DROP, TIMEOUT_BEFORE_DROP_DEFAULT), "Property \""
 						+ TIMEOUT_BEFORE_DROP
 						+ "\" should be an long number");
+	}
+
+	public long getDelayBetweenConsistencyChecks() {
+		return delayBetweenConsistencyChecks;
 	}
 
 	protected void updateTimestamp() {
@@ -241,7 +245,7 @@ public abstract class ConsistencyTestWorkload extends CoreWorkload {
 		return this.keyCounter;
 	}
 	
-	public long getNewRequestPriodInMicros(){
+	public long getNewRequestPeriodInMicros(){
 		return this.newRequestPeriod;
 	}
 	

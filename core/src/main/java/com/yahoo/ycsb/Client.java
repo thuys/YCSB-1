@@ -821,7 +821,7 @@ public class Client {
 			//TODO: resetten van target
 			ReaderWorkload workload = (ReaderWorkload) createWorkload(prop, workloadclass);
 			// Schedule first read thread one microsecond after write thread
-			long delayToWriterThread = ((workload.getNewRequestPriodInMicros()/amount)*i)+1;
+			long delayToWriterThread = ((workload.getDelayBetweenConsistencyChecks()/amount)*i)+1;
 			result.add(workload);
 			ConsistencyOneMeasurement measurement = measurements.getNewReadConsistencyOneMeasurement();
 			workload.setOneMeasurement(measurement);
