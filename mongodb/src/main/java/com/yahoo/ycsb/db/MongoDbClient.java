@@ -172,6 +172,7 @@ public class MongoDbClient extends DB {
 								+ e1.toString());
 				// e1.printStackTrace();
 			}
+			System.out.println("MongoDB type: Read: " + readPreference + ", Write: " + writeConcern);
 
 		}
 	}
